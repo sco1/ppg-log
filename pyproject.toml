@@ -1,41 +1,46 @@
 [tool.poetry]
-name = "Py-Template"
+name = "PPG-Log"
 version = "0.1.0"
-description = "It's a Python project template!"
+description = "Helper Tools for PPG Flight Log Management."
 authors = ["sco1 <sco1.git@gmail.com>"]
 
 readme = "README.md"
 homepage = "https://github.com/sco1/"
-repository = "https://github.com/sco1/py-template"
+repository = "https://github.com/sco1/ppg-log"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering",
     "Typing :: Typed",
 ]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
+pandas = "^1.4"
+plotly = "^5.8"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3"
 bump2version = "^1.0"
 flake8 = "^4.0"
 flake8-annotations = "^2.8"
-flake8-bugbear = "^22.3"
+flake8-bugbear = "^22.4"
 flake8-docstrings = "^1.6"
 flake8-fixme = "^1.1"
 flake8-type-checking = {version="^1.5", python="<4.0"}
 isort = "^5.10"
-mypy = "^0.942"
+mypy = "^0.950"
 pep8-naming = "^0.12"
 pre-commit = "^2.18"
 pytest = "^7.1"
 pytest-check = "^1.0"
 pytest-cov = "^3.0"
-pytest-randomly = "^3.11"
+pytest-randomly = "^3.12"
 tox = "^3.25"
 
 [tool.black]
