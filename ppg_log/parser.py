@@ -9,7 +9,6 @@ if t.TYPE_CHECKING:
     from pathlib import Path
 
 N_HEADER_LINES = 2
-LANDED_THRESHOLD_MPS = 2.235
 
 
 def load_flysight(filepath: Path, n_header_lines: int = N_HEADER_LINES) -> pd.DataFrame:
@@ -26,7 +25,7 @@ def load_flysight(filepath: Path, n_header_lines: int = N_HEADER_LINES) -> pd.Da
     flight_log = pd.read_csv(filepath, header=0, skiprows=range(1, n_header_lines))
 
     flight_log["time"] = pd.to_datetime(flight_log["time"])
-    flight_log["elapsed_time"] = flight_log["time"] - flight_log["time"][0]
+    flight_log["elapsed_time"] = (flight_log["time"] - flight_log["time"][0]).dt.total_seconds()
     flight_log["total_vel"] = (flight_log["velN"].pow(2) + flight_log["velE"].pow(2)).pow(1 / 2)
 
     return flight_log
