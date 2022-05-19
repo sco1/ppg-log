@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "PPG-Log"
 version = "0.1.0"
-description = "Helper Tools for PPG Flight Log Management."
+description = "Helper Tools for PPG FlySight Flight Log Management"
 authors = ["sco1 <sco1.git@gmail.com>"]
 
 readme = "README.md"
@@ -24,6 +24,7 @@ python = "^3.9"
 kaleido = "^0.2, != 0.2.1.post1"
 pandas = "^1.4"
 plotly = "^5.8"
+rich = "^12.4"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3"

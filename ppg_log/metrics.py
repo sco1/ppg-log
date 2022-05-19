@@ -7,13 +7,16 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
+from ppg_log import parser
+from ppg_log.parser import START_TRIM
+
 if t.TYPE_CHECKING:
     from pathlib import Path
 
 pd.options.plotting.backend = "plotly"
 
 ROLLING_WINDOW_WIDTH = 5
-LANDED_THRESHOLD_MPS = 2.235
+AIRBORNE_THRESHOLD_MPS = 2.235
 FLIGHT_LENGTH_THRESHOLD = 10
 
 
@@ -22,9 +25,7 @@ class FlightMode(IntEnum):  # noqa: D101
     AIRBORNE = 1
 
 
-def _classify_flight_mode(
-    total_velocity: float, airborne_threshold: float = LANDED_THRESHOLD_MPS
-) -> FlightMode:
+def _classify_flight_mode(total_velocity: float, airborne_threshold: int | float) -> FlightMode:
     """Classify inflight vs. on ground based on the provided velocity threshold."""
     if total_velocity >= airborne_threshold:
         return FlightMode.AIRBORNE
@@ -33,7 +34,9 @@ def _classify_flight_mode(
 
 
 def classify_flight(
-    flight_log: pd.DataFrame, window_width: int = ROLLING_WINDOW_WIDTH
+    flight_log: pd.DataFrame,
+    window_width: int = ROLLING_WINDOW_WIDTH,
+    airborne_threshold: int | float = AIRBORNE_THRESHOLD_MPS,
 ) -> pd.DataFrame:
     """
     Classify inflight vs. on ground for the provided flight log based on total velocity.
@@ -45,7 +48,7 @@ def classify_flight(
         flight_log["total_vel"]
         .rolling(window_width, min_periods=1)
         .mean()
-        .apply(_classify_flight_mode)
+        .apply(_classify_flight_mode, airborne_threshold=airborne_threshold)
     )
 
     return flight_log
@@ -155,3 +158,33 @@ def build_summary_plot(
 
     if show_plot:
         fig.show()
+
+
+def batch_process(
+    top_dir: Path,
+    log_pattern: str = r"*.CSV",
+    start_trim: int = START_TRIM,
+    airborne_threshold: int | float = AIRBORNE_THRESHOLD_MPS,
+) -> None:
+    """
+    Batch process FlySight logs matching the provided `log_pattern` relative to `top_dir`.
+
+    Flight logs are parsed & a summary plot output to the same directory as the parsed FlySight log
+    file.
+    """
+    # Listify flight logs to get a total count
+    log_files = list(top_dir.glob(log_pattern))
+    print(f"Found {len(log_files)} log files to process ...", end="")
+
+    # Iterate per flight log so we're not loading every log into memory at once
+    for log_file in log_files:
+        flight_log = parser.load_flysight(log_file, start_trim=start_trim)
+        flight_log = classify_flight(flight_log, airborne_threshold=airborne_threshold)
+
+        # Log files are grouped by date, need to retain this since it's not in the CSV filename
+        log_date = log_file.parent.stem
+        log_time = log_file.stem
+        save_path = log_file.parent / f"{log_date}_{log_time}.png"
+        build_summary_plot(flight_log, save_path=save_path, show_plot=False)
+    else:
+        print("Done!")
