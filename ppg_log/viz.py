@@ -20,12 +20,12 @@ def summary_plot(
     save_path: Path | None = None,
     show_plot: bool = False,
     show_flight_mode: bool = False,
-) -> None:
+) -> None:  # pragma: no cover
     """
     Build a plot for the provided flight log showing basic flight information.
 
     Currently visualized quantities:
-        * Total velocity (m/s)
+        * Groundspeed (m/s)
         * Altitude (m MSL)
         * Flight Segments
 
@@ -41,8 +41,8 @@ def summary_plot(
     fig.add_trace(
         go.Scatter(
             x=elapsed_time,
-            y=flight_log.flight_data["total_vel"],
-            name="Total Velocity",
+            y=flight_log.flight_data["groundspeed"],
+            name="Groundspeed",
         )
     )
     fig.add_trace(
@@ -92,7 +92,7 @@ def summary_plot(
     fig.update_layout(
         title={"text": title_str, "x": 0.5, "y": 0.9, "xanchor": "center", "yanchor": "top"},
         xaxis={"title": "Elapsed Time (s)", "domain": [0, 0.75]},
-        yaxis={"title": "Total Velocity (m/s)"},
+        yaxis={"title": "Groundspeed (m/s)"},
         yaxis2={
             "title": "Altitude (m MSL)",
             "anchor": "x",

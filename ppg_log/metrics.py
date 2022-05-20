@@ -18,7 +18,7 @@ if t.TYPE_CHECKING:
 
 START_TRIM = 45  # seconds
 ROLLING_WINDOW_WIDTH = 5
-AIRBORNE_THRESHOLD = 2.235  # m/s
+AIRBORNE_THRESHOLD = 2.235  # Groundspeed, m/s
 FLIGHT_LENGTH_THRESHOLD = 15  # seconds
 
 NUMERIC_T = int | float
@@ -35,7 +35,7 @@ class FlightSegment:  # noqa: D101
     end_idx: int
     duration: dt.timedelta
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return (
             f"Start idx: {self.start_idx}\n"
             f"End idx: {self.end_idx}\n"
@@ -53,7 +53,7 @@ class LogMetadata:  # noqa: D101
     total_flight_time: dt.timedelta | None = None  # If None, no metrics calculations have been done
     flight_segments: list[FlightSegment] | None = None
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         if self.flight_segments:
             humanized_time = humanize.precisedelta(
                 self.total_flight_time, minimum_unit="seconds", format="%d"
@@ -74,9 +74,9 @@ class FlightLog:  # noqa: D101
     metadata: LogMetadata
 
 
-def _classify_flight_mode(total_velocity: float, airborne_threshold: NUMERIC_T) -> FlightMode:
-    """Classify inflight vs. on ground based on the provided velocity threshold."""
-    if total_velocity >= airborne_threshold:
+def _classify_flight_mode(groundspeed: float, airborne_threshold: NUMERIC_T) -> FlightMode:
+    """Classify inflight vs. on ground based on the provided groundspeed threshold."""
+    if groundspeed >= airborne_threshold:
         return FlightMode.AIRBORNE
     else:
         return FlightMode.GROUND
@@ -88,13 +88,13 @@ def classify_flight(
     airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD,
 ) -> pd.DataFrame:
     """
-    Classify inflight vs. on ground for the provided flight log based on total velocity.
+    Classify inflight vs. on ground for the provided flight log based on groundspeed.
 
-    To address noise in the velocity measurements, a rolling window mean of `window_width` total
-    velocitiey is passed to the flight mode classifier.
+    To address noise in the groundspeed measurements, a rolling window mean of `window_width`
+    groundspeeds is passed to the flight mode classifier.
     """
     flight_log["flight_mode"] = (
-        flight_log["total_vel"]
+        flight_log["groundspeed"]
         .rolling(window_width, min_periods=1)
         .mean()
         .apply(_classify_flight_mode, airborne_threshold=airborne_threshold)
@@ -103,24 +103,16 @@ def classify_flight(
     return flight_log
 
 
-def find_flights(
-    flight_log: pd.DataFrame, time_threshold: NUMERIC_T, start_trim: NUMERIC_T
-) -> list[FlightSegment] | None:
-    """
-    Identify start & end indices of flight segments for the provided flight log.
-
-    To account for velocity instabilities (seen primarily during takeoffs), flight segments whose
-    length is below the specified minimum `time_threshold` are merged into the next found flight
-    segment whose length exceeds the threshold.
-    """
-    elapsed_time = flight_log["elapsed_time"]
+def _segment_flights(flight_data: pd.DataFrame, start_trim: NUMERIC_T):
+    """"""
+    elapsed_time = flight_data["elapsed_time"]
 
     # Find the trim index
     trim_idx = (elapsed_time >= start_trim).idxmax()
 
     # Find consecutive runs of inflight modes & group by start & end indices of each run
     # AKA find takeoffs & landings
-    diffs = np.abs(np.diff(flight_log["flight_mode"].iloc[trim_idx:]))
+    diffs = np.abs(np.diff(flight_data["flight_mode"].iloc[trim_idx:]))
     diffs[0] = 0
     # Offset by the trim index since numpy's indices will be relative to the slice
     flights = np.flatnonzero(diffs == 1) + trim_idx
@@ -133,6 +125,23 @@ def find_flights(
         next_segment_delta.append(next_start - current_end)
 
     flights = flights.reshape(-1, 2)
+
+    return flights, next_segment_delta
+
+
+def find_flights(
+    flight_data: pd.DataFrame, time_threshold: NUMERIC_T, start_trim: NUMERIC_T
+) -> list[FlightSegment] | None:
+    """
+    Identify start & end indices of flight segments for the provided flight log.
+
+    To account for groundspeed instabilities (seen primarily during takeoffs), flight segments whose
+    length is below the specified minimum `time_threshold` are merged into the next found flight
+    segment whose length exceeds the threshold.
+    """
+    elapsed_time = flight_data["elapsed_time"]
+
+    flights, next_segment_delta = _segment_flights(flight_data, start_trim)
     if flights.size == 0:
         return None
 
