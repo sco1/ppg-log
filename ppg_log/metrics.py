@@ -9,16 +9,16 @@ import humanize
 import numpy as np
 
 from ppg_log import parser, viz
-from ppg_log.parser import START_TRIM
 
 if t.TYPE_CHECKING:
     from pathlib import Path
 
     import pandas as pd
 
+START_TRIM = 45  # seconds
 ROLLING_WINDOW_WIDTH = 5
-AIRBORNE_THRESHOLD_MPS = 2.235
-FLIGHT_LENGTH_THRESHOLD = 10
+AIRBORNE_THRESHOLD = 2.235  # m/s
+FLIGHT_LENGTH_THRESHOLD = 10  # seconds
 
 NUMERIC_T = int | float
 
@@ -77,7 +77,7 @@ def _classify_flight_mode(total_velocity: float, airborne_threshold: NUMERIC_T) 
 def classify_flight(
     flight_log: pd.DataFrame,
     window_width: int = ROLLING_WINDOW_WIDTH,
-    airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD_MPS,
+    airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD,
 ) -> pd.DataFrame:
     """
     Classify inflight vs. on ground for the provided flight log based on total velocity.
@@ -95,7 +95,9 @@ def classify_flight(
     return flight_log
 
 
-def find_flights(flight_log: pd.DataFrame, time_threshold: NUMERIC_T) -> list[FlightSegment] | None:
+def find_flights(
+    flight_log: pd.DataFrame, time_threshold: NUMERIC_T, start_trim: NUMERIC_T
+) -> list[FlightSegment] | None:
     """
     Identify start & end indices of flight segments for the provided flight log.
 
@@ -116,6 +118,10 @@ def find_flights(flight_log: pd.DataFrame, time_threshold: NUMERIC_T) -> list[Fl
     valid_flights = []
     merging = False
     for segment_start, segment_end in flights:
+        # Skip flights at the beginning of the file to avoid startup instability
+        if flight_log["elapsed_time"].iloc[segment_start] < start_trim:
+            continue
+
         if not merging:
             flight_start = segment_start
 
@@ -148,7 +154,10 @@ def find_flights(flight_log: pd.DataFrame, time_threshold: NUMERIC_T) -> list[Fl
 
 
 def generate_flight_metrics(
-    flight_log: FlightLog, airborne_threshold: NUMERIC_T, time_threshold: NUMERIC_T
+    flight_log: FlightLog,
+    airborne_threshold: NUMERIC_T,
+    time_threshold: NUMERIC_T,
+    start_trim: NUMERIC_T,
 ) -> FlightLog:
     """Generate flight segment information for the provided `FlightLog` instance."""
     flight_log.flight_data = classify_flight(
@@ -156,7 +165,7 @@ def generate_flight_metrics(
     )
 
     flight_log.metadata.flight_segments = find_flights(
-        flight_log.flight_data, time_threshold=time_threshold
+        flight_log.flight_data, time_threshold=time_threshold, start_trim=start_trim
     )
     if flight_log.metadata.flight_segments:
         flight_log.metadata.n_flight_segments = len(flight_log.metadata.flight_segments)
@@ -173,8 +182,8 @@ def generate_flight_metrics(
 
 def process_log(
     log_file: Path,
-    start_trim: int = START_TRIM,
-    airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD_MPS,
+    start_trim: NUMERIC_T = START_TRIM,
+    airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD,
     time_threshold: NUMERIC_T = FLIGHT_LENGTH_THRESHOLD,
 ) -> FlightLog:
     """Processing pipeline for an individual FlySight log file."""
@@ -182,11 +191,14 @@ def process_log(
     log_date = log_file.parent.stem
     log_time = log_file.stem
     flight_log = FlightLog(
-        flight_data=parser.load_flysight(log_file, start_trim=start_trim),
+        flight_data=parser.load_flysight(log_file),
         metadata=LogMetadata(log_date=log_date, log_time=log_time),
     )
     flight_log = generate_flight_metrics(
-        flight_log, airborne_threshold=airborne_threshold, time_threshold=time_threshold
+        flight_log,
+        airborne_threshold=airborne_threshold,
+        time_threshold=time_threshold,
+        start_trim=start_trim,
     )
 
     return flight_log
@@ -195,8 +207,8 @@ def process_log(
 def batch_process(
     top_dir: Path,
     log_pattern: str = r"*.CSV",
-    start_trim: int = START_TRIM,
-    airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD_MPS,
+    start_trim: NUMERIC_T = START_TRIM,
+    airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD,
     time_threshold: NUMERIC_T = FLIGHT_LENGTH_THRESHOLD,
 ) -> None:
     """
