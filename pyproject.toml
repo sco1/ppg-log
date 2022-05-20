@@ -13,14 +13,14 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering",
     "Typing :: Typed",
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 humanize = "^4.1"
 kaleido = "^0.2, != 0.2.1.post1"
 pandas = "^1.4"
