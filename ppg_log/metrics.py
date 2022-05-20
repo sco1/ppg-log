@@ -4,6 +4,7 @@ import datetime as dt
 import typing as t
 from dataclasses import dataclass
 from enum import IntEnum
+from itertools import zip_longest
 
 import humanize
 import numpy as np
@@ -105,47 +106,56 @@ def find_flights(
     length is below the specified minimum `time_threshold` are merged into the next found flight
     segment whose length exceeds the threshold.
     """
+    elapsed_time = flight_log["elapsed_time"]
+
+    # Find the trim index
+    trim_idx = (elapsed_time >= start_trim).idxmax()
+
     # Find consecutive runs of inflight modes & group by start & end indices of each run
     # AKA find takeoffs & landings
-    diffs = np.abs(np.diff(flight_log["flight_mode"]))
+    diffs = np.abs(np.diff(flight_log["flight_mode"].iloc[trim_idx:]))
     diffs[0] = 0
-    flights = np.flatnonzero(diffs == 1).reshape(-1, 2)
+    # Offset by the trim index since numpy's indices will be relative to the slice
+    flights = np.flatnonzero(diffs == 1) + trim_idx
 
+    # Calculate time delta between flight segments, then reshape into nx2 for segment indices
+    next_segment_delta = []
+    for current_end, next_start in zip(
+        elapsed_time.iloc[flights[1:-1:2]], elapsed_time.iloc[flights[2::2]]
+    ):
+        next_segment_delta.append(next_start - current_end)
+
+    flights = flights.reshape(-1, 2)
     if flights.size == 0:
         return None
 
     # Iterate through flights & merge takeoff noise into the actual flight segment
     valid_flights = []
     merging = False
-    for segment_start, segment_end in flights:
-        # Skip flights at the beginning of the file to avoid startup instability
-        if flight_log["elapsed_time"].iloc[segment_start] < start_trim:
-            continue
-
+    for (segment_start, segment_end), next_delta in zip_longest(flights, next_segment_delta):
         if not merging:
             flight_start = segment_start
 
-        segment_time = (
-            flight_log["elapsed_time"].iloc[segment_end]
-            - flight_log["elapsed_time"].iloc[segment_start]
-        )
+        segment_time = elapsed_time.iloc[segment_end] - elapsed_time.iloc[segment_start]
 
-        # Flight length below threshold, end idx is discarded & we merge this segment into the next
-        # actual flight
         if segment_time < time_threshold:
             merging = True
             continue
 
+        # Inside a valid flight segment, check delta to next segment to see if this is contains the
+        # actual landing or if it's just some other flight mode noise
+        # If next_delta is None then we're in the last segment
+        if next_delta is None or next_delta >= time_threshold:
+            merging = False
+        else:
+            continue
+
         flight_duration = dt.timedelta(
-            seconds=(
-                flight_log["elapsed_time"].iloc[segment_end]
-                - flight_log["elapsed_time"].iloc[flight_start]
-            )
+            seconds=elapsed_time.iloc[segment_end] - elapsed_time.iloc[flight_start]
         )
         valid_flights.append(
             FlightSegment(start_idx=flight_start, end_idx=segment_end, duration=flight_duration)
         )
-        merging = False
 
     if len(valid_flights) == 0:
         return None
