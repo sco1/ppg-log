@@ -19,7 +19,7 @@ if t.TYPE_CHECKING:
 START_TRIM = 45  # seconds
 ROLLING_WINDOW_WIDTH = 5
 AIRBORNE_THRESHOLD = 2.235  # m/s
-FLIGHT_LENGTH_THRESHOLD = 10  # seconds
+FLIGHT_LENGTH_THRESHOLD = 15  # seconds
 
 NUMERIC_T = int | float
 
@@ -34,6 +34,13 @@ class FlightSegment:  # noqa: D101
     start_idx: int
     end_idx: int
     duration: dt.timedelta
+
+    def __str__(self) -> str:
+        return (
+            f"Start idx: {self.start_idx}\n"
+            f"End idx: {self.end_idx}\n"
+            f"Duration: {self.duration.seconds} seconds"
+        )
 
 
 @dataclass
@@ -137,10 +144,17 @@ def find_flights(
             flight_start = segment_start
 
         segment_time = elapsed_time.iloc[segment_end] - elapsed_time.iloc[segment_start]
-
         if segment_time < time_threshold:
-            merging = True
-            continue
+            # Check to see if the noise spike should be merged into the next valid flight segment.
+            if next_delta is not None:
+                if next_delta < time_threshold:
+                    # If the spike is followed closely by another flight segment, try to merge
+                    merging = True
+                    continue
+                else:
+                    # Otherwise, ignore this segment completely
+                    merging = False
+                    continue
 
         # Inside a valid flight segment, check delta to next segment to see if this is contains the
         # actual landing or if it's just some other flight mode noise
@@ -148,14 +162,17 @@ def find_flights(
         if next_delta is None or next_delta >= time_threshold:
             merging = False
         else:
+            merging = True  # Toggle in case we haven't encountered any takeoff turbulence
             continue
 
         flight_duration = dt.timedelta(
             seconds=elapsed_time.iloc[segment_end] - elapsed_time.iloc[flight_start]
         )
-        valid_flights.append(
-            FlightSegment(start_idx=flight_start, end_idx=segment_end, duration=flight_duration)
-        )
+        # Catch short flight segments from the end of the file
+        if flight_duration.total_seconds() >= time_threshold:
+            valid_flights.append(
+                FlightSegment(start_idx=flight_start, end_idx=segment_end, duration=flight_duration)
+            )
 
     if len(valid_flights) == 0:
         return None
