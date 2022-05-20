@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime as dt
 import typing as t
 from collections import defaultdict
 
@@ -54,3 +55,14 @@ def batch_load_flysight(
         parsed_logs[log_date][log_file.stem] = load_flysight(log_file)
 
     return parsed_logs
+
+
+def logpath2datetime(log_filepath: Path) -> dt.datetime:
+    """
+    Generate a `datetime` instance from the provided FlySight log filepath.
+
+    It is assumed that the log file is named `HH-MM-SS.CSV` and contained in a parent directory
+    named `YY-mm-dd`.
+    """
+    datestr = f"{log_filepath.parent.stem}_{log_filepath.stem}"
+    return dt.datetime.strptime(datestr, r"%y-%m-%d_%H-%M-%S")
