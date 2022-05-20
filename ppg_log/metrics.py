@@ -7,16 +7,14 @@ from enum import IntEnum
 
 import humanize
 import numpy as np
-import pandas as pd
-import plotly.graph_objects as go
 
-from ppg_log import parser
+from ppg_log import parser, viz
 from ppg_log.parser import START_TRIM
 
 if t.TYPE_CHECKING:
     from pathlib import Path
 
-pd.options.plotting.backend = "plotly"
+    import pandas as pd
 
 ROLLING_WINDOW_WIDTH = 5
 AIRBORNE_THRESHOLD_MPS = 2.235
@@ -34,7 +32,7 @@ class FlightMode(IntEnum):  # noqa: D101
 class FlightSegment:  # noqa: D101
     start_idx: int
     end_idx: int
-    duration: float
+    duration: dt.timedelta
 
 
 @dataclass
@@ -44,7 +42,7 @@ class LogMetadata:  # noqa: D101
 
     # Flight quantities are calculated downstream
     n_flight_segments: int | None = None  # If None, no metrics calculations have been done
-    total_flight_time: NUMERIC_T | None = None  # If None, no metrics calculations have been done
+    total_flight_time: dt.timedelta | None = None  # If None, no metrics calculations have been done
     flight_segments: list[FlightSegment] | None = None
 
     def __str__(self) -> str:
@@ -168,7 +166,7 @@ def generate_flight_metrics(
         )
     else:
         flight_log.metadata.n_flight_segments = 0
-        flight_log.metadata.total_flight_time = 0
+        flight_log.metadata.total_flight_time = dt.timedelta()
 
     return flight_log
 
@@ -223,66 +221,6 @@ def batch_process(
         save_path = (
             log_file.parent / f"{flight_log.metadata.log_date}_{flight_log.metadata.log_time}.png"
         )
-        build_summary_plot(flight_log.flight_data, save_path=save_path, show_plot=False)
+        viz.summary_plot(flight_log, save_path=save_path)
     else:
         print("Done!")
-
-
-def build_summary_plot(
-    flight_log: pd.DataFrame, save_path: Path | None = None, show_plot: bool = False
-) -> None:
-    """
-    Build a plot for the provided flight log showing basic flight information.
-
-    Currently visualized quantities:
-        * Total velocity (m/s)
-        * Altitude (m MSL)
-        * Derived flight mode
-
-    If `save_path` is specified, the plot is saved as an image file to the specified path. Any
-    existing plot is overwritten.
-
-    If `show_plot` is `True`, the plot is displayed on screen.
-    """
-    fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(x=flight_log["elapsed_time"], y=flight_log["total_vel"], name="Total Velocity")
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=flight_log["elapsed_time"], y=flight_log["hMSL"], name="Altitude (m MSL)", yaxis="y2"
-        ),
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=flight_log["elapsed_time"],
-            y=flight_log["flight_mode"],
-            name="Flight Mode",
-            yaxis="y3",
-        ),
-    )
-
-    fig.update_layout(
-        xaxis={"title": "Elapsed Time (s)", "domain": [0, 0.75]},
-        yaxis={"title": "Total Velocity (m/s)"},
-        yaxis2={
-            "title": "Altitude (m MSL)",
-            "anchor": "x",
-            "overlaying": "y",
-            "side": "right",
-        },
-        yaxis3={
-            "title": "Flight Mode",
-            "anchor": "free",
-            "overlaying": "y",
-            "side": "right",
-            "position": 0.85,
-            "nticks": 2,
-        },
-    )
-
-    if save_path:
-        fig.write_image(save_path)
-
-    if show_plot:
-        fig.show()
