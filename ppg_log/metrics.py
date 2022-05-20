@@ -216,6 +216,7 @@ def process_log(
 
 def batch_process(
     top_dir: Path,
+    save_dir: Path | None = None,
     log_pattern: str = r"*.CSV",
     start_trim: NUMERIC_T = START_TRIM,
     airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD,
@@ -224,8 +225,9 @@ def batch_process(
     """
     Batch process FlySight logs matching the provided `log_pattern` relative to `top_dir`.
 
-    Flight logs are parsed & a summary plot output to the same directory as the parsed FlySight log
-    file.
+    Flight logs are parsed & a summary plot output generated. If `save_dir` is specified, it is used
+    as the base directory for the plot outputs, otherwise the outputs are saved to the same
+    directory as the parsed log file.
     """
     # Listify flight logs to get a total count
     log_files = list(top_dir.glob(log_pattern))
@@ -240,9 +242,12 @@ def batch_process(
             time_threshold=time_threshold,
         )
 
-        save_path = (
-            log_file.parent / f"{flight_log.metadata.log_date}_{flight_log.metadata.log_time}.png"
-        )
+        if save_dir is None:
+            parent = log_file.parent
+        else:
+            parent = save_dir
+
+        save_path = parent / f"{flight_log.metadata.log_date}_{flight_log.metadata.log_time}.png"
         viz.summary_plot(flight_log, save_path=save_path)
     else:
         print("Done!")
