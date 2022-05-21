@@ -23,4 +23,5 @@ extend-select=
 extend-exclude=
     .venv,
 per-file-ignores =
+    ppg_log/db.py: D101 D103,
     tests/test_*.py:D103 E501,

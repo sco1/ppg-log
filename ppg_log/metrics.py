@@ -74,6 +74,11 @@ class FlightLog:  # noqa: D101
     flight_data: pd.DataFrame
     metadata: LogMetadata
 
+    @property
+    def log_datetime(self) -> dt.datetime:
+        datestr = f"{self.metadata.log_date}_{self.metadata.log_time}"
+        return dt.datetime.strptime(datestr, r"%y-%m-%d_%H-%M-%S")
+
 
 def _classify_flight_mode(groundspeed: float, airborne_threshold: NUMERIC_T) -> FlightMode:
     """Classify inflight vs. on ground based on the provided groundspeed threshold."""
@@ -147,7 +152,7 @@ def find_flights(
 
     Some basic filtering is done on candidate flight segments to help mitigate false positives from
     groundspeed instability.
-    
+
     There are 2 classifications for short-duration segments:
         1. Transient spike while firmly on the ground, these should be discarded
         2. Noise while taking off, in flight, or while landing, these should be retained
