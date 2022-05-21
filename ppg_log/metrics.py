@@ -51,7 +51,7 @@ class LogMetadata:  # noqa: D101
 
     # Flight quantities are calculated downstream
     n_flight_segments: int | None = None  # If None, no metrics calculations have been done
-    total_flight_time: dt.timedelta | None = None  # If None, no metrics calculations have been done
+    total_flight_time: dt.timedelta = dt.timedelta()
     flight_segments: list[FlightSegment] | None = None
 
     def __str__(self) -> str:  # pragma: no cover
@@ -76,6 +76,7 @@ class FlightLog:  # noqa: D101
 
     @property
     def log_datetime(self) -> dt.datetime:
+        """Generate a `datetime` instance from the `FlightLog`'s metadata."""
         datestr = f"{self.metadata.log_date}_{self.metadata.log_time}"
         return dt.datetime.strptime(datestr, r"%y-%m-%d_%H-%M-%S")
 

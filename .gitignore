@@ -47,3 +47,4 @@ htmlcov
 
 # sample data
 /sample_data
+*.db

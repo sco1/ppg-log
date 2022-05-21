@@ -24,7 +24,9 @@ python = "^3.10"
 humanize = "^4.1"
 kaleido = "^0.2, != 0.2.1.post1"
 pandas = "^1.4"
+peewee = "^3.14"
 plotly = "^5.8"
+python-dotenv = "^0.20"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3"
