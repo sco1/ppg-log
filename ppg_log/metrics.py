@@ -80,6 +80,14 @@ class FlightLog:  # noqa: D101
         datestr = f"{self.metadata.log_date}_{self.metadata.log_time}"
         return dt.datetime.strptime(datestr, r"%y-%m-%d_%H-%M-%S")
 
+    def summary_plot(self, show_plot: bool = True, save_dir: Path | None = None) -> None:
+        """Build a summary plot for optional display and/or output to an image file."""
+        if save_dir is not None:
+            filename = f"{self.metadata.log_date}_{self.metadata.log_time}.png"
+            save_path = save_dir / filename
+
+        viz.summary_plot(self, save_path=save_path, show_plot=show_plot)
+
 
 def _classify_flight_mode(groundspeed: float, airborne_threshold: NUMERIC_T) -> FlightMode:
     """Classify inflight vs. on ground based on the provided groundspeed threshold."""
@@ -269,27 +277,31 @@ def process_log(
 
 def batch_process(
     top_dir: Path,
-    save_dir: Path | None = None,
     log_pattern: str = r"*.CSV",
     start_trim: NUMERIC_T = START_TRIM,
     airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD,
     time_threshold: NUMERIC_T = FLIGHT_LENGTH_THRESHOLD,
     classify_segments: bool = True,
-) -> None:
+    verbose: bool = True,
+) -> list[FlightLog]:
     """
-    Batch process FlySight logs matching the provided `log_pattern` relative to `top_dir`.
+    Batch process pipeline for a directory of FlySight logs.
 
-    Flight logs are parsed & a summary plot output generated. If `save_dir` is specified, it is used
-    as the base directory for the plot outputs, otherwise the outputs are saved to the same
-    directory as the parsed log file.
+    Log file discovery is not recursive by default, the `log_pattern` kwarg can be adjusted to
+    support a recursive glob.
+
+    NOTE: File case sensitivity is deferred to the OS; `log_pattern` is passed to glob as-is so
+    matches may or may not be case-sensitive.
     """
     # Listify flight logs to get a total count
     log_files = list(top_dir.glob(log_pattern))
-    print(f"Found {len(log_files)} log files to process.")
+    if verbose:
+        print(f"Found {len(log_files)} log files to process.")
 
-    # Iterate per flight log so we're not loading every log into memory at once
+    parsed_logs = []
     for log_file in log_files:
-        print(f"Processing {log_file.parent.stem}/{log_file.name} ... ", end="")
+        if verbose:
+            print(f"Processing {log_file.parent.stem}/{log_file.name} ... ", end="")
 
         flight_log = process_log(
             log_file,
@@ -298,13 +310,9 @@ def batch_process(
             time_threshold=time_threshold,
             classify_segments=classify_segments,
         )
+        parsed_logs.append(flight_log)
 
-        if save_dir is None:
-            parent = log_file.parent
-        else:
-            parent = save_dir
+        if verbose:
+            print("Done")
 
-        save_path = parent / f"{flight_log.metadata.log_date}_{flight_log.metadata.log_time}.png"
-        viz.summary_plot(flight_log, save_path=save_path)
-
-        print("Done")
+    return parsed_logs
