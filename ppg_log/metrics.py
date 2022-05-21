@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import typing as t
+from collections import deque
 from dataclasses import dataclass
 from enum import IntEnum
 from itertools import zip_longest
@@ -103,8 +104,15 @@ def classify_flight(
     return flight_log
 
 
-def _segment_flights(flight_data: pd.DataFrame, start_trim: NUMERIC_T):
-    """"""
+def _segment_flights(
+    flight_data: pd.DataFrame, start_trim: NUMERIC_T
+) -> tuple[list[list[int]], list[NUMERIC_T]]:
+    """
+    Identify candidate flight segments from the provided flight data.
+
+    A list of `[takeoff, landing]` indices is returned along with a list of the time deltas, as
+    decimal seconds, from the end of a segment to the beginning of the next segment.
+    """
     elapsed_time = flight_data["elapsed_time"]
 
     # Find the trim index
@@ -126,7 +134,9 @@ def _segment_flights(flight_data: pd.DataFrame, start_trim: NUMERIC_T):
 
     flights = flights.reshape(-1, 2)
 
-    return flights, next_segment_delta
+    # Cast flights to a list on return so I don't have to deal the huge cascade of mypy errors from
+    # trying to use an ndarray with zip_longest
+    return flights.tolist(), next_segment_delta
 
 
 def find_flights(
@@ -135,53 +145,59 @@ def find_flights(
     """
     Identify start & end indices of flight segments for the provided flight log.
 
-    To account for groundspeed instabilities (seen primarily during takeoffs), flight segments whose
-    length is below the specified minimum `time_threshold` are merged into the next found flight
-    segment whose length exceeds the threshold.
+    Some basic filtering is done on candidate flight segments to help mitigate false positives from
+    groundspeed instability.
+    
+    There are 2 classifications for short-duration segments:
+        1. Transient spike while firmly on the ground, these should be discarded
+        2. Noise while taking off, in flight, or while landing, these should be retained
+
+    `time_threshold`, in seconds, is used to help classify short-duration segments as well as
+    identify when the pilot has landed.
+
+    `start_trim`, in seconds, is used to exclude segments from the beginning of the data file.
     """
     elapsed_time = flight_data["elapsed_time"]
 
-    flights, next_segment_delta = _segment_flights(flight_data, start_trim)
-    if flights.size == 0:
+    flight_segments, next_segment_delta = _segment_flights(flight_data, start_trim)
+    if len(flight_segments) == 0:
         return None
 
-    # Iterate through flights & merge takeoff noise into the actual flight segment
     valid_flights = []
-    merging = False
-    for (segment_start, segment_end), next_delta in zip_longest(flights, next_segment_delta):
-        if not merging:
-            flight_start = segment_start
-
-        segment_time = elapsed_time.iloc[segment_end] - elapsed_time.iloc[segment_start]
-        if segment_time < time_threshold:
-            # Check to see if the noise spike should be merged into the next valid flight segment.
-            if next_delta is not None:
-                if next_delta < time_threshold:
-                    # If the spike is followed closely by another flight segment, try to merge
-                    merging = True
-                    continue
-                else:
-                    # Otherwise, ignore this segment completely
-                    merging = False
-                    continue
-
-        # Inside a valid flight segment, check delta to next segment to see if this is contains the
-        # actual landing or if it's just some other flight mode noise
-        # If next_delta is None then we're in the last segment
-        if next_delta is None or next_delta >= time_threshold:
-            merging = False
+    flight_indices: deque[int] = deque()
+    for (segment_start, segment_end), next_delta in zip_longest(
+        flight_segments, next_segment_delta
+    ):
+        segment_duration = elapsed_time.iloc[segment_end] - elapsed_time.iloc[segment_start]
+        if next_delta is not None and (segment_duration < time_threshold):
+            # Check for transient spikes
+            # These are below the duration threshold & distant from the next flight segment
+            if not flight_indices and (next_delta >= time_threshold):
+                flight_indices.clear()
+                continue
+            else:
+                # Otherwise, we'll consider this segment as part of the current flight segment
+                flight_indices.extend((segment_start, segment_end))
         else:
-            merging = True  # Toggle in case we haven't encountered any takeoff turbulence
-            continue
+            # This is a valid flight segment and/or the last segment in the file
+            flight_indices.extend((segment_start, segment_end))
 
-        flight_duration = dt.timedelta(
-            seconds=elapsed_time.iloc[segment_end] - elapsed_time.iloc[flight_start]
-        )
-        # Catch short flight segments from the end of the file
-        if flight_duration.total_seconds() >= time_threshold:
-            valid_flights.append(
-                FlightSegment(start_idx=flight_start, end_idx=segment_end, duration=flight_duration)
+        # Now check the time to the next flight segment to see if we've landed
+        if next_delta is None or (next_delta >= time_threshold):
+            takeoff_idx = flight_indices[0]
+            landing_idx = flight_indices[-1]
+            flight_indices.clear()
+
+            # Transient spikes may be close enough to combine into a segment that's shorter than the
+            # time threshold, or may end up at the very end of the file
+            # This can be discarded
+            flight_duration = dt.timedelta(
+                seconds=elapsed_time.iloc[landing_idx] - elapsed_time.iloc[takeoff_idx]
             )
+            if flight_duration.total_seconds() < time_threshold:
+                continue
+
+            valid_flights.append(FlightSegment(takeoff_idx, landing_idx, flight_duration))
 
     if len(valid_flights) == 0:
         return None
@@ -194,24 +210,26 @@ def generate_flight_metrics(
     airborne_threshold: NUMERIC_T,
     time_threshold: NUMERIC_T,
     start_trim: NUMERIC_T,
+    classify_segments: bool,
 ) -> FlightLog:
     """Generate flight segment information for the provided `FlightLog` instance."""
     flight_log.flight_data = classify_flight(
         flight_log.flight_data, airborne_threshold=airborne_threshold
     )
 
-    flight_log.metadata.flight_segments = find_flights(
-        flight_log.flight_data, time_threshold=time_threshold, start_trim=start_trim
-    )
-    if flight_log.metadata.flight_segments:
-        flight_log.metadata.n_flight_segments = len(flight_log.metadata.flight_segments)
-        flight_log.metadata.total_flight_time = sum(
-            (segment.duration for segment in flight_log.metadata.flight_segments),
-            start=dt.timedelta(),
+    if classify_segments:
+        flight_log.metadata.flight_segments = find_flights(
+            flight_log.flight_data, time_threshold=time_threshold, start_trim=start_trim
         )
-    else:
-        flight_log.metadata.n_flight_segments = 0
-        flight_log.metadata.total_flight_time = dt.timedelta()
+        if flight_log.metadata.flight_segments:
+            flight_log.metadata.n_flight_segments = len(flight_log.metadata.flight_segments)
+            flight_log.metadata.total_flight_time = sum(
+                (segment.duration for segment in flight_log.metadata.flight_segments),
+                start=dt.timedelta(),
+            )
+        else:
+            flight_log.metadata.n_flight_segments = 0
+            flight_log.metadata.total_flight_time = dt.timedelta()
 
     return flight_log
 
@@ -221,6 +239,7 @@ def process_log(
     start_trim: NUMERIC_T = START_TRIM,
     airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD,
     time_threshold: NUMERIC_T = FLIGHT_LENGTH_THRESHOLD,
+    classify_segments: bool = True,
 ) -> FlightLog:
     """Processing pipeline for an individual FlySight log file."""
     # Log files are grouped by date, need to retain this since it's not in the CSV filename
@@ -230,11 +249,13 @@ def process_log(
         flight_data=parser.load_flysight(log_file),
         metadata=LogMetadata(log_date=log_date, log_time=log_time),
     )
+
     flight_log = generate_flight_metrics(
         flight_log,
         airborne_threshold=airborne_threshold,
         time_threshold=time_threshold,
         start_trim=start_trim,
+        classify_segments=classify_segments,
     )
 
     return flight_log
@@ -247,6 +268,7 @@ def batch_process(
     start_trim: NUMERIC_T = START_TRIM,
     airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD,
     time_threshold: NUMERIC_T = FLIGHT_LENGTH_THRESHOLD,
+    classify_segments: bool = True,
 ) -> None:
     """
     Batch process FlySight logs matching the provided `log_pattern` relative to `top_dir`.
@@ -257,15 +279,18 @@ def batch_process(
     """
     # Listify flight logs to get a total count
     log_files = list(top_dir.glob(log_pattern))
-    print(f"Found {len(log_files)} log files to process ...", end="")
+    print(f"Found {len(log_files)} log files to process.")
 
     # Iterate per flight log so we're not loading every log into memory at once
     for log_file in log_files:
+        print(f"Processing {log_file.parent.stem}/{log_file.name} ... ", end="")
+
         flight_log = process_log(
             log_file,
             start_trim=start_trim,
             airborne_threshold=airborne_threshold,
             time_threshold=time_threshold,
+            classify_segments=classify_segments,
         )
 
         if save_dir is None:
@@ -275,5 +300,5 @@ def batch_process(
 
         save_path = parent / f"{flight_log.metadata.log_date}_{flight_log.metadata.log_time}.png"
         viz.summary_plot(flight_log, save_path=save_path)
-    else:
-        print("Done!")
+
+        print("Done")

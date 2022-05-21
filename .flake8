@@ -20,8 +20,7 @@ extend-ignore=
 extend-select=
     # Type Guards
     TC1
-exclude=
-    __pycache__,.cache,
-    venv,.venv,
+extend-exclude=
+    .venv,
 per-file-ignores =
     tests/test_*.py:D103 E501,
