@@ -19,9 +19,12 @@ extend-ignore=
     N802,N806,N815,
 extend-select=
     # Type Guards
-    TC1
+    TC1,
 extend-exclude=
     .venv,
 per-file-ignores =
     ppg_log/db.py: D101 D103 D106,
     tests/test_*.py:D103 E501,
+extend-immutable-calls =
+    # Typer CLI
+    typer.Option,
