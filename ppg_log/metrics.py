@@ -80,7 +80,9 @@ class FlightLog:  # noqa: D101
         datestr = f"{self.metadata.log_date}_{self.metadata.log_time}"
         return dt.datetime.strptime(datestr, r"%y-%m-%d_%H-%M-%S")
 
-    def summary_plot(self, show_plot: bool = True, save_dir: Path | None = None) -> None:
+    def summary_plot(
+        self, show_plot: bool = True, save_dir: Path | None = None
+    ) -> None:  # pragma: no cover
         """Build a summary plot for optional display and/or output to an image file."""
         if save_dir is not None:
             filename = f"{self.metadata.log_date}_{self.metadata.log_time}.png"

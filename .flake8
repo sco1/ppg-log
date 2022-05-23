@@ -25,6 +25,7 @@ extend-exclude=
 per-file-ignores =
     ppg_log/db.py: D101 D103 D106,
     tests/test_*.py:D103 E501,
+    tests/checks.py: D103,
 extend-immutable-calls =
     # Typer CLI
     typer.Option,
