@@ -120,6 +120,9 @@ def summary_plot(
     )
 
     if save_path:
+        # Make sure output directory exists
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+
         fig.write_image(save_path)
 
     if show_plot:

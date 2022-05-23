@@ -40,7 +40,36 @@ Commands:
 <!-- [[[end]]] -->
 
 ## Usage
-🚧 🚧 🚧
+### `ppglog single`
+Process a single FlySight log file.
+#### Input Parameters
+| Parameter              | Description                                                      | Type        | Default    |
+|------------------------|------------------------------------------------------------------|-------------|------------|
+| `--log-filepath`       | Path to FlySight log to parse.                                   | `Path\|None` | GUI Prompt |
+| `--start_trim`         | Seconds to discard from the beginning of the flight log.         | `int\|float` | `45`       |
+| `--airborne_threshold` | Minimum groundspeed, as m/s, required to be considered airborne. | `int\|float` | `2.235`    |
+| `--time_threshold`     | Duration, as seconds, used to characterize flight segments.      | `int\|float` | `15`       |
+| `--show_plot`          | Show parsed flight log summary plot.                             | `bool`      | `True`     |
+| `--plot_save_dir`      | Path to save parsed flight log summary plot.<sup>1</sup>         | `Path\|None` | `None`     |
+
+1. If `None`, the summary plot will not be saved
+
+### `ppglog batch`
+Batch process a directory of FlySight log files.
+#### Input Parameters
+| Parameter              | Description                                                      | Type        | Default    |
+|------------------------|------------------------------------------------------------------|-------------|------------|
+| `--log-dir`            | Path to FlySight log directory to parse.                         | `Path\|None` | GUI Prompt |
+| `--log-pattern`        | FlySight log file glob pattern.<sup>1,2</sup>                    | `str`       | `"*.CSV*"` |
+| `--start_trim`         | Seconds to discard from the beginning of the flight log.         | `int\|float` | `45`       |
+| `--airborne_threshold` | Minimum groundspeed, as m/s, required to be considered airborne. | `int\|float` | `2.235`    |
+| `--time_threshold`     | Duration, as seconds, used to characterize flight segments.      | `int\|float` | `15`       |
+| `--plot_save_dir`      | Path to save parsed flight log summary plot.<sup>3</sup>         | `Path\|None` | `None`     |
+| `--verbose`            | Display in-console information on the running parsing operation. | `bool`      | `True`     |
+
+1. Case sensitivity is deferred to the host OS
+2. Recursive globbing requires manual specification (e.g. `**/*.CSV`)
+3. If `None`, the summary plot will not be saved
 
 ## Contributing
 ### Development Environment

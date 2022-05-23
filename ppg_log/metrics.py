@@ -85,6 +85,8 @@ class FlightLog:  # noqa: D101
         if save_dir is not None:
             filename = f"{self.metadata.log_date}_{self.metadata.log_time}.png"
             save_path = save_dir / filename
+        else:
+            save_path = None
 
         viz.summary_plot(self, save_path=save_path, show_plot=show_plot)
 
