@@ -28,4 +28,4 @@ per-file-ignores =
     tests/checks.py: D103,
 extend-immutable-calls =
     # Typer CLI
-    typer.Option,
+    typer.Option, typer.Argument,

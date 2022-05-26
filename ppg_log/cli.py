@@ -3,11 +3,17 @@ from pathlib import Path
 from tkinter import filedialog
 
 import click
+import dotenv
 import typer
 
-from ppg_log import metrics
+from ppg_log import db, metrics
+
+dotenv.load_dotenv()
 
 ppglog_cli = typer.Typer(add_completion=False)
+
+db_cli = typer.Typer(add_completion=False)
+ppglog_cli.add_typer(db_cli, name="db", help="Interact with a PPG Log database instance.")
 
 CURRENT_DIR = Path()
 
@@ -57,6 +63,7 @@ def single(
     time_threshold: float = typer.Option(metrics.FLIGHT_LENGTH_THRESHOLD),
     show_plot: bool = typer.Option(True),
     plot_save_dir: Path = typer.Option(None, file_okay=True, dir_okay=False),
+    db_insert: bool = typer.Option(False),
 ) -> None:
     """Single flight log processing pipeline."""
     if log_filepath is None:
@@ -70,6 +77,9 @@ def single(
     )
     flight_log.summary_plot(show_plot=show_plot, save_dir=plot_save_dir)
 
+    if db_insert:
+        db.insert_single(flight_log)
+
 
 @ppglog_cli.command()
 def batch(
@@ -79,6 +89,7 @@ def batch(
     airborne_threshold: float = typer.Option(metrics.AIRBORNE_THRESHOLD),
     time_threshold: float = typer.Option(metrics.FLIGHT_LENGTH_THRESHOLD),
     plot_save_dir: Path = typer.Option(None, file_okay=False, dir_okay=True),
+    db_insert: bool = typer.Option(False),
     verbose: bool = typer.Option(True),
 ) -> None:
     """Batch flight log processing pipeline."""
@@ -96,6 +107,20 @@ def batch(
 
     for log in flight_logs:
         log.summary_plot(show_plot=False, save_dir=plot_save_dir)
+
+    if db_insert:
+        db.bulk_insert(flight_logs)
+
+
+@db_cli.command()
+def set_address(value: str = typer.Argument(...)) -> None:
+    """Save the db address to a local .env file."""
+    local_dotenv = Path(dotenv.find_dotenv())
+    if not local_dotenv.is_file():
+        local_dotenv = Path() / ".env"
+        local_dotenv.write_text("")
+
+    dotenv.set_key(local_dotenv, db.DB_URL_VARNAME, value)
 
 
 if __name__ == "__main__":  # pragma: no cover

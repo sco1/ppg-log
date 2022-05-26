@@ -11,7 +11,8 @@ if t.TYPE_CHECKING:
     from ppg_log import metrics
 
 load_dotenv()
-db_url = os.environ.get("DB_URL", "./test_db.db")
+DB_URL_VARNAME = "DB_URL"
+db_url = os.environ.get(DB_URL_VARNAME, "./test_db.db")
 flight_db = pw.SqliteDatabase(db_url)
 
 
@@ -21,7 +22,7 @@ class BaseModel(pw.Model):
 
 
 class FlightLogEntry(BaseModel):
-    flight_id = pw.IntegerField(primary_key=True)
+    flight_log_id = pw.IntegerField(primary_key=True)
     flight_datetime = pw.DateTimeField(unique=True)
     n_flights = pw.IntegerField()
     total_flight_time = pw.FloatField()
