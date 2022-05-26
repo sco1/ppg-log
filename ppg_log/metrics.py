@@ -5,6 +5,7 @@ import typing as t
 from collections import deque
 from dataclasses import dataclass
 from enum import IntEnum
+from functools import cached_property
 from itertools import zip_longest
 
 import humanize
@@ -74,7 +75,7 @@ class FlightLog:  # noqa: D101
     flight_data: pd.DataFrame
     metadata: LogMetadata
 
-    @property
+    @cached_property
     def log_datetime(self) -> dt.datetime:
         """Generate a `datetime` instance from the `FlightLog`'s metadata."""
         datestr = f"{self.metadata.log_date}_{self.metadata.log_time}"

@@ -73,21 +73,22 @@ def insert_single(flight_log: metrics.FlightLog) -> None:
         )
 
 
-def bulk_insert(flight_logs: list[metrics.FlightLog]) -> None:
+def bulk_insert(flight_logs: list[metrics.FlightLog], verbose: bool = True) -> None:
     """
     Bulk insert entries into the database for the provided list of `FlightLog` instances.
 
-    NOTE: Bulk insertion is aborted completely if an integrity error is encountered, likely if the
-    one or more logs already exist in the database.
+    NOTE: Flight logs whose corresponding datetime already exists in the database are ignored.
     """
-    entries = [FlightLogEntry.from_flight_log(flight_log) for flight_log in flight_logs]
+    entries = []
+    for log in flight_logs:
+        matching = FlightLogEntry.get_or_none(FlightLogEntry.flight_datetime == log.log_datetime)
 
-    try:
-        FlightLogEntry.bulk_create(entries)
-    except pw.IntegrityError:
-        print(
-            (
-                "Bulk Insertion aborted due to an integrity error. "
-                "One or more logs matching their starting datetime already exists in the database."
-            )
-        )
+        if matching is None:
+            entries.append(FlightLogEntry.from_flight_log(log))
+        else:
+            if verbose:
+                print(
+                    f"Flight log from {log.log_datetime} already exists in database (ID: {matching})."  # noqa: E501
+                )
+
+    FlightLogEntry.bulk_create(entries)

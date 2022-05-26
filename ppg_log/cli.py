@@ -109,7 +109,7 @@ def batch(
         log.summary_plot(show_plot=False, save_dir=plot_save_dir)
 
     if db_insert:
-        db.bulk_insert(flight_logs)
+        db.bulk_insert(flight_logs, verbose=verbose)
 
 
 @db_cli.command()
