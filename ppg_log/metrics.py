@@ -31,7 +31,7 @@ class FlightMode(IntEnum):  # noqa: D101
     AIRBORNE = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class FlightSegment:  # noqa: D101
     start_idx: int
     end_idx: int
@@ -92,6 +92,73 @@ class FlightLog:  # noqa: D101
             save_path = None
 
         viz.summary_plot(self, save_path=save_path, show_plot=show_plot)
+
+
+@dataclass(frozen=True)
+class LogSummary:  # noqa: D101
+    n_logs: int
+
+    # If these are None, no metrics calculations have been done
+    n_flight_segments: int | None
+    total_flight_time: dt.timedelta | None
+    avg_flight_time: dt.timedelta | None
+    shortest_flight: dt.timedelta | None
+    longest_flight: dt.timedelta | None
+
+    def __str__(self) -> str:  # pragma: no cover
+        return NotImplemented
+
+    @classmethod
+    def from_flight_logs(cls, flight_logs: t.Collection[FlightLog]) -> LogSummary:
+        """"""
+        if not flight_logs:
+            raise ValueError("No flight logs provided.")
+
+        n_segments = 0
+        flight_time = dt.timedelta()
+        shortest = dt.timedelta()
+        longest = dt.timedelta()
+        for log in flight_logs:
+            if log.metadata.n_flight_segments is not None:
+                n_segments += log.metadata.n_flight_segments
+
+                if log.metadata.flight_segments:  # pragma: no branch
+                    for segment in log.metadata.flight_segments:
+                        flight_time += segment.duration
+
+                        if shortest == dt.timedelta() or segment.duration < shortest:
+                            shortest = segment.duration
+
+                        if segment.duration > longest:
+                            longest = segment.duration
+        else:
+            if flight_time == dt.timedelta():
+                total_flight_time = None
+            else:
+                total_flight_time = flight_time
+
+        if total_flight_time is not None and n_segments is not None:
+            avg_flight_time = dt.timedelta(seconds=total_flight_time.total_seconds() / n_segments)
+            shortest_flight = shortest
+            longest_flight = longest
+        else:
+            avg_flight_time = None
+            shortest_flight = None
+            longest_flight = None
+
+        return cls(
+            n_logs=len(flight_logs),
+            n_flight_segments=n_segments if n_segments else None,
+            total_flight_time=total_flight_time,
+            avg_flight_time=avg_flight_time,
+            shortest_flight=shortest_flight,
+            longest_flight=longest_flight,
+        )
+
+    @classmethod
+    def from_flight_log(cls, flight_log: FlightLog) -> LogSummary:
+        """"""
+        return cls.from_flight_logs([flight_log])
 
 
 def _classify_flight_mode(groundspeed: float, airborne_threshold: NUMERIC_T) -> FlightMode:
