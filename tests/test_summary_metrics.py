@@ -1,7 +1,6 @@
 import datetime as dt
 from functools import partial
 
-import pandas as pd
 import pytest
 
 from ppg_log.metrics import FlightLog, FlightSegment, LogMetadata, LogSummary
@@ -9,8 +8,7 @@ from ppg_log.metrics import FlightLog, FlightSegment, LogMetadata, LogSummary
 DUMMY_DURATION = dt.timedelta(seconds=5)
 PARTIAL_SEGMENT = partial(FlightSegment, start_idx=-1, end_idx=-1)
 PARTIAL_META = partial(LogMetadata, log_date="2022-04-20", log_time="04-20-00")
-EMPTY_DF = pd.DataFrame()
-PARTIAL_LOG = partial(FlightLog, flight_data=EMPTY_DF)
+PARTIAL_LOG = partial(FlightLog, flight_data=None)
 
 
 METADATA_CASES = (

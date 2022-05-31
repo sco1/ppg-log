@@ -5,7 +5,7 @@ import typing as t
 from collections import deque
 from dataclasses import dataclass
 from enum import IntEnum
-from functools import cached_property
+from functools import cached_property, partial
 from itertools import zip_longest
 
 import humanize
@@ -24,6 +24,10 @@ AIRBORNE_THRESHOLD = 2.235  # Groundspeed, m/s
 FLIGHT_LENGTH_THRESHOLD = 15  # seconds
 
 NUMERIC_T = int | float
+
+LOG_DATETIME_FMT = r"%Y-%m-%d_%H-%M-%S"
+
+HUMANIZED_DELTA = partial(humanize.precisedelta, minimum_unit="seconds", format="%d")
 
 
 class FlightMode(IntEnum):  # noqa: D101
@@ -57,9 +61,7 @@ class LogMetadata:  # noqa: D101
 
     def __str__(self) -> str:  # pragma: no cover
         if self.flight_segments:
-            humanized_time = humanize.precisedelta(
-                self.total_flight_time, minimum_unit="seconds", format="%d"
-            )
+            humanized_time = HUMANIZED_DELTA(self.total_flight_time)
         else:
             humanized_time = "No flights detected"
 
@@ -75,11 +77,14 @@ class FlightLog:  # noqa: D101
     flight_data: pd.DataFrame
     metadata: LogMetadata
 
+    def __str__(self) -> str:  # pragma: no cover
+        return str(self.metadata)
+
     @cached_property
     def log_datetime(self) -> dt.datetime:
         """Generate a `datetime` instance from the `FlightLog`'s metadata."""
         datestr = f"{self.metadata.log_date}_{self.metadata.log_time}"
-        return dt.datetime.strptime(datestr, r"%y-%m-%d_%H-%M-%S")
+        return dt.datetime.strptime(datestr, LOG_DATETIME_FMT)
 
     def summary_plot(
         self, show_plot: bool = True, save_dir: Path | None = None
@@ -106,7 +111,22 @@ class LogSummary:  # noqa: D101
     longest_flight: dt.timedelta | None
 
     def __str__(self) -> str:  # pragma: no cover
-        return NotImplemented
+        if self.total_flight_time:
+            total_time = HUMANIZED_DELTA(self.total_flight_time)
+            avg_time = HUMANIZED_DELTA(self.avg_flight_time)
+            shortest_time = HUMANIZED_DELTA(self.shortest_flight)
+            longest_time = HUMANIZED_DELTA(self.longest_flight)
+
+            humanized_time = (
+                f"    Total Flight Time: {total_time}\n"
+                f"    Average Flight Time: {avg_time}\n"
+                f"    Shortest Flight: {shortest_time}\n"
+                f"    Longest Flight: {longest_time}\n"
+            )
+        else:
+            humanized_time = "    No flights detected or flight metrics not yet calculated."
+
+        return f"Log Summary:\n    Flight Logs: {self.n_logs}\n{humanized_time}"
 
     @classmethod
     def from_flight_logs(cls, flight_logs: t.Collection[FlightLog]) -> LogSummary:
