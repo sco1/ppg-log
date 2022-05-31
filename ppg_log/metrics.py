@@ -11,7 +11,7 @@ from itertools import zip_longest
 import humanize
 import numpy as np
 
-from ppg_log import parser, viz
+from ppg_log import db, parser, viz
 
 if t.TYPE_CHECKING:
     from pathlib import Path
@@ -110,7 +110,7 @@ class LogSummary:  # noqa: D101
 
     @classmethod
     def from_flight_logs(cls, flight_logs: t.Collection[FlightLog]) -> LogSummary:
-        """"""
+        """Generate a `LogSummary` instance from the provided `FlightLog` instances."""
         if not flight_logs:
             raise ValueError("No flight logs provided.")
 
@@ -157,8 +157,34 @@ class LogSummary:  # noqa: D101
 
     @classmethod
     def from_flight_log(cls, flight_log: FlightLog) -> LogSummary:
-        """"""
+        """Generate a `LogSummary` instance from the provided `FlightLog` instance."""
         return cls.from_flight_logs([flight_log])
+
+    @classmethod
+    def from_db(cls) -> LogSummary:
+        """Generate a `LogSummary` instance from the currently configured database."""
+        db_data = db.summary_query()
+        avg_flight_time = dt.timedelta(
+            seconds=db_data.total_flight_time.total_seconds() / db_data.n_flight_segments
+        )
+
+        shortest = dt.timedelta()
+        longest = dt.timedelta()
+        for segment in db_data.flight_segments:
+            if shortest == dt.timedelta() or segment < shortest:
+                shortest = segment
+
+            if segment > longest:
+                longest = segment
+
+        return cls(
+            n_logs=db_data.n_logs,
+            n_flight_segments=db_data.n_flight_segments,
+            total_flight_time=db_data.total_flight_time,
+            avg_flight_time=avg_flight_time,
+            shortest_flight=shortest,
+            longest_flight=longest,
+        )
 
 
 def _classify_flight_mode(groundspeed: float, airborne_threshold: NUMERIC_T) -> FlightMode:

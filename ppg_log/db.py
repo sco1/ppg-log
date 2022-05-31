@@ -48,6 +48,15 @@ class FlightLogEntry(BaseModel):
         )
 
 
+class SummaryTuple(t.NamedTuple):
+    """Helper container for summary information coming out of the database."""
+
+    n_logs: int
+    n_flight_segments: int
+    total_flight_time: dt.timedelta
+    flight_segments: list[dt.timedelta]
+
+
 def create_db() -> None:
     with flight_db:
         flight_db.create_tables([FlightLogEntry])
@@ -92,3 +101,31 @@ def bulk_insert(flight_logs: list[metrics.FlightLog], verbose: bool = True) -> N
                 )
 
     FlightLogEntry.bulk_create(entries)
+
+
+def summary_query() -> SummaryTuple:
+    """
+    Summary statistics query for the current database.
+
+    A `SummaryTuple` instance is provided for use with downstream metrics calculations.
+    """
+    # Pull easily queried values from the db
+    n_logs, n_flight_segments, total_flight_time = FlightLogEntry.select(
+        pw.fn.COUNT(FlightLogEntry.flight_log_id),
+        pw.fn.SUM(FlightLogEntry.n_flights),
+        pw.fn.SUM(FlightLogEntry.total_flight_time),
+    ).scalar(as_tuple=True)
+
+    # Need to deserialize the flight segments to get the rest of the summary information
+    raw_segments = FlightLogEntry.select(FlightLogEntry.flight_segment_durations).tuples()
+    all_segments = ",".join(row[0] for row in raw_segments if row[0])
+    converted_segments = [
+        dt.timedelta(seconds=float(segment)) for segment in all_segments.split(",")
+    ]
+
+    return SummaryTuple(
+        n_logs=n_logs,
+        n_flight_segments=n_flight_segments,
+        total_flight_time=dt.timedelta(seconds=total_flight_time),
+        flight_segments=converted_segments,
+    )
