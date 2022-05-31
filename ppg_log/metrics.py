@@ -11,12 +11,14 @@ from itertools import zip_longest
 import humanize
 import numpy as np
 
-from ppg_log import db, parser, viz
+from ppg_log import parser, viz
 
 if t.TYPE_CHECKING:
     from pathlib import Path
 
     import pandas as pd
+
+    from ppg_log import db
 
 START_TRIM = 45  # seconds
 ROLLING_WINDOW_WIDTH = 5
@@ -181,9 +183,8 @@ class LogSummary:  # noqa: D101
         return cls.from_flight_logs([flight_log])
 
     @classmethod
-    def from_db(cls) -> LogSummary:
-        """Generate a `LogSummary` instance from the currently configured database."""
-        db_data = db.summary_query()
+    def from_db_query(cls, db_data: db.SummaryTuple) -> LogSummary:
+        """Generate a `LogSummary` instance from the provided DB query response."""
         avg_flight_time = dt.timedelta(
             seconds=db_data.total_flight_time.total_seconds() / db_data.n_flight_segments
         )
@@ -205,6 +206,13 @@ class LogSummary:  # noqa: D101
             shortest_flight=shortest,
             longest_flight=longest,
         )
+
+    @classmethod
+    def from_db(cls) -> LogSummary:
+        """Generate a `LogSummary` instance from the currently configured database."""
+        raise NotImplementedError
+        db_query = ...
+        return cls.from_db_query(db_query)
 
 
 def _classify_flight_mode(groundspeed: float, airborne_threshold: NUMERIC_T) -> FlightMode:

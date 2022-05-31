@@ -57,8 +57,9 @@ class SummaryTuple(t.NamedTuple):
     flight_segments: list[dt.timedelta]
 
 
-def create_db() -> None:
+def create_db() -> None:  # pragma: no cover
     with flight_db:
+        """Initialize a brand new database."""
         flight_db.create_tables([FlightLogEntry])
 
 
