@@ -31,7 +31,13 @@ class FlightLogEntry(BaseModel):
 
     @classmethod
     def from_flight_log(cls, flight_log: metrics.FlightLog) -> FlightLogEntry:
-        """Build a model instance from the provided `FlightLog` instance."""
+        """
+        Build an unsaved model instance from the provided `FlightLog` instance.
+
+        NOTE: Because this model is unsaved, for single logs this must be inserted with `.save()`.
+        For batching, `bulk_create()` accepts a list of unsaved instances so the return can be used
+        as-is.
+        """
         if flight_log.metadata.flight_segments:
             segment_durations = ",".join(
                 str(segment.duration.total_seconds())
@@ -73,8 +79,10 @@ def insert_single(flight_log: metrics.FlightLog) -> None:
     entry = FlightLogEntry.from_flight_log(flight_log)
 
     try:
-        entry.create()
+        entry.save()
     except pw.IntegrityError:
+        # This will mask other integrity issues, but for now we can assume that the inputs are
+        # well-formed enough that this is the only issue we're going to run into
         print(
             (
                 "Insertion aborted due to an integrity error. "
@@ -96,7 +104,7 @@ def bulk_insert(flight_logs: list[metrics.FlightLog], verbose: bool = True) -> N
         if matching is None:
             entries.append(FlightLogEntry.from_flight_log(log))
         else:
-            if verbose:
+            if verbose:  # pragma: no cover
                 print(
                     f"Flight log from {log.log_datetime} already exists in database (ID: {matching})."  # noqa: E501
                 )
