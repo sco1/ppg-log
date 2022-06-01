@@ -50,7 +50,7 @@ CLASSIFICATION_TEST_CASES = (
                     start_idx=605,
                     end_idx=4052,
                     duration=dt.timedelta(seconds=691),
-                )
+                ),
             ],
         ),
     ),
@@ -64,6 +64,52 @@ CLASSIFICATION_TEST_CASES = (
         DataTruthMap(
             json_path=SAMPLE_DATA_DIR / "only_noise.json",
             flight_segments=None,
+        ),
+    ),
+    (
+        DataTruthMap(
+            json_path=SAMPLE_DATA_DIR / "start_noise_single_flight.json",
+            flight_segments=[
+                metrics.FlightSegment(
+                    start_idx=1631,
+                    end_idx=8101,
+                    duration=dt.timedelta(seconds=1294),
+                ),
+            ],
+        ),
+    ),
+    (
+        DataTruthMap(
+            json_path=SAMPLE_DATA_DIR / "single_flight_start_spikes.json",
+            flight_segments=[
+                metrics.FlightSegment(
+                    start_idx=1666,
+                    end_idx=17332,
+                    duration=dt.timedelta(seconds=3133),
+                ),
+            ],
+        ),
+    ),
+    (
+        DataTruthMap(
+            json_path=SAMPLE_DATA_DIR / "multi_flight.json",
+            flight_segments=[
+                metrics.FlightSegment(
+                    start_idx=1564,
+                    end_idx=3155,
+                    duration=dt.timedelta(seconds=318),
+                ),
+                metrics.FlightSegment(
+                    start_idx=5207,
+                    end_idx=6409,
+                    duration=dt.timedelta(seconds=240),
+                ),
+                metrics.FlightSegment(
+                    start_idx=11370,
+                    end_idx=13684,
+                    duration=dt.timedelta(seconds=462),
+                ),
+            ],
         ),
     ),
 )

@@ -1,0 +1,32 @@
+{
+    "multi_flight": {
+        "log_file": "21-12-11/21-41-24.CSV",
+        "start_idx": null,
+        "end_idx": null
+    },
+    "no_flights": {
+        "log_file": "21-12-05/12-01-00.CSV",
+        "start_idx": null,
+        "end_idx": null
+    },
+    "only_noise": {
+        "log_file": "22-04-13/10-52-00.CSV",
+        "start_idx": null,
+        "end_idx": 900
+    },
+    "single_flight_start_spikes": {
+        "log_file": "22-04-14/11-32-00.CSV",
+        "start_idx": null,
+        "end_idx": null
+    },
+    "single_segment_no_noise": {
+        "log_file": "21-12-05/12-30-37.CSV",
+        "start_idx": null,
+        "end_idx": null
+    },
+    "start_noise_single_flight": {
+        "log_file": "22-04-13/10-52-00.CSV",
+        "start_idx": null,
+        "end_idx": null
+    }
+}
