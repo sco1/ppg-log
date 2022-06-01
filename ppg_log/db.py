@@ -104,11 +104,13 @@ def bulk_insert(flight_logs: list[metrics.FlightLog], verbose: bool = True) -> N
     NOTE: Flight logs whose corresponding datetime already exists in the database are ignored.
     """
     entries = []
+    seen_dts = set()  # Keep track of duplicates within the batch itself
     for log in flight_logs:
         matching = FlightLogEntry.get_or_none(FlightLogEntry.flight_datetime == log.log_datetime)
 
-        if matching is None:
+        if matching is None and log.log_datetime not in seen_dts:
             entries.append(FlightLogEntry.from_flight_log(log))
+            seen_dts.add(log.log_datetime)
         else:
             if verbose:  # pragma: no cover
                 print(

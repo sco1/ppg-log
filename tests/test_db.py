@@ -103,7 +103,6 @@ def test_bulk_insert_ignore_duplicates(session: None) -> None:
     assert n_rows == 2
 
 
-@pytest.mark.xfail(reason="Check not implemented, see #8")
 def test_bulk_insert_ignore_duplicates_empty_db(session: None) -> None:
     db.bulk_insert([DUMMY_FLIGHT_LOG, DUMMY_FLIGHT_LOG], verbose=False)
 
