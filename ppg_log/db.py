@@ -131,6 +131,15 @@ def summary_query() -> SummaryTuple:
         pw.fn.SUM(FlightLogEntry.total_flight_time),
     ).scalar(as_tuple=True)
 
+    # Catch an empty DB
+    if n_logs == 0:
+        return SummaryTuple(
+            n_logs=0,
+            n_flight_segments=0,
+            total_flight_time=dt.timedelta(),
+            flight_segments=[],
+        )
+
     # Need to deserialize the flight segments to get the rest of the summary information
     raw_segments = FlightLogEntry.select(FlightLogEntry.flight_segment_durations).tuples()
     all_segments = ",".join(row[0] for row in raw_segments if row[0])

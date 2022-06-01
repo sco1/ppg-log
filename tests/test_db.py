@@ -117,7 +117,6 @@ def test_flight_log_empty_segments() -> None:
     assert entry.flight_segment_durations == ""
 
 
-@pytest.mark.xfail(reason="Check not implemented, see #9")
 def test_summary_empty_db(session: None) -> None:
     truth_summary = db.SummaryTuple(
         n_logs=0, n_flight_segments=0, total_flight_time=dt.timedelta(), flight_segments=[]
