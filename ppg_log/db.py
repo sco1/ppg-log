@@ -46,9 +46,15 @@ class FlightLogEntry(BaseModel):
         else:
             segment_durations = ""
 
+        # If no flight classification has been done we eed to catch any None values
+        if flight_log.metadata.n_flight_segments is None:
+            n_flights = 0
+        else:
+            n_flights = flight_log.metadata.n_flight_segments
+
         return cls(
             flight_datetime=flight_log.log_datetime,
-            n_flights=flight_log.metadata.n_flight_segments,
+            n_flights=n_flights,
             total_flight_time=flight_log.metadata.total_flight_time.total_seconds(),
             flight_segment_durations=segment_durations,
         )

@@ -38,7 +38,7 @@ DUMMY_BULK_LOGS = [
 
 DUMMY_FLIGHT_LOG_NO_FLIGHTS = FlightLog(
     flight_data=None,
-    metadata=PARTIAL_META(),
+    metadata=PARTIAL_META(log_date="2022-04-21"),
 )
 
 
@@ -64,7 +64,6 @@ def test_single_insert(session: None) -> None:
     assert n_rows == 1
 
 
-@pytest.mark.xfail(reason="Check not implemented, see #10")
 def test_insert_log_empty_segments(session: None) -> None:
     db.insert_single(DUMMY_FLIGHT_LOG_NO_FLIGHTS)
 
@@ -89,7 +88,6 @@ def test_bulk_insert(session: None) -> None:
     assert n_rows == 2
 
 
-@pytest.mark.xfail(reason="Check not implemented, see #10")
 def test_bulk_insert_empty_flight(session: None) -> None:
     db.bulk_insert([DUMMY_FLIGHT_LOG, DUMMY_FLIGHT_LOG_NO_FLIGHTS])
 
@@ -147,15 +145,15 @@ SUMMARY_QUERIES = (
             flight_segments=[DUMMY_DURATION, DUMMY_DURATION],
         ),
     ),
-    # (
-    #     [DUMMY_FLIGHT_LOG, DUMMY_FLIGHT_LOG_NO_FLIGHTS],
-    #     db.SummaryTuple(
-    #         n_logs=2,
-    #         n_flight_segments=1,
-    #         total_flight_time=DUMMY_DURATION,
-    #         flight_segments=[DUMMY_DURATION],
-    #     ),
-    # ),
+    (
+        [DUMMY_FLIGHT_LOG, DUMMY_FLIGHT_LOG_NO_FLIGHTS],
+        db.SummaryTuple(
+            n_logs=2,
+            n_flight_segments=1,
+            total_flight_time=DUMMY_DURATION,
+            flight_segments=[DUMMY_DURATION],
+        ),
+    ),
 )
 
 
