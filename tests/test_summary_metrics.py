@@ -125,28 +125,14 @@ BATCH_METADATA_CASES = (
 )
 
 
-DUMMY_METADATA = PARTIAL_META(
-    n_flight_segments=1,
-    total_flight_time=DUMMY_DURATION,
-    flight_segments=[PARTIAL_SEGMENT(duration=DUMMY_DURATION)],
-)
-LOGS_BATCH = [
-    PARTIAL_LOG(metadata=DUMMY_METADATA),
-    PARTIAL_LOG(metadata=DUMMY_METADATA),
-]
-BATCH_TRUTH = LogSummary(
-    n_logs=2,
-    n_flight_segments=2,
-    total_flight_time=dt.timedelta(seconds=10),
-    avg_flight_time=DUMMY_DURATION,
-    shortest_flight=DUMMY_DURATION,
-    longest_flight=DUMMY_DURATION,
-)
-
-
 @pytest.mark.parametrize(("flight_logs", "truth_summary"), BATCH_METADATA_CASES)
 def test_batch_log_summary(flight_logs: list[FlightLog], truth_summary: LogSummary) -> None:
     assert LogSummary.from_flight_logs(flight_logs) == truth_summary
+
+
+def test_empty_batch_summary_raises() -> None:
+    with pytest.raises(ValueError):
+        LogSummary.from_flight_logs([])
 
 
 DB_METADATA_CASES = (

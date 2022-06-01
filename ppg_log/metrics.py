@@ -37,7 +37,7 @@ class FlightMode(IntEnum):  # noqa: D101
     AIRBORNE = 1
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class FlightSegment:  # noqa: D101
     start_idx: int
     end_idx: int
@@ -51,7 +51,7 @@ class FlightSegment:  # noqa: D101
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class LogMetadata:  # noqa: D101
     log_date: str
     log_time: str
@@ -74,7 +74,7 @@ class LogMetadata:  # noqa: D101
         )
 
 
-@dataclass
+@dataclass  # Can't slot w/cached_property
 class FlightLog:  # noqa: D101
     flight_data: pd.DataFrame
     metadata: LogMetadata
@@ -101,7 +101,7 @@ class FlightLog:  # noqa: D101
         viz.summary_plot(self, save_path=save_path, show_plot=show_plot)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class LogSummary:  # noqa: D101
     n_logs: int
 
@@ -206,13 +206,6 @@ class LogSummary:  # noqa: D101
             shortest_flight=shortest,
             longest_flight=longest,
         )
-
-    @classmethod
-    def from_db(cls) -> LogSummary:
-        """Generate a `LogSummary` instance from the currently configured database."""
-        raise NotImplementedError
-        db_query = ...
-        return cls.from_db_query(db_query)
 
 
 def _classify_flight_mode(groundspeed: float, airborne_threshold: NUMERIC_T) -> FlightMode:
@@ -347,10 +340,10 @@ def find_flights(
 
 def generate_flight_metrics(
     flight_log: FlightLog,
-    airborne_threshold: NUMERIC_T,
-    time_threshold: NUMERIC_T,
-    start_trim: NUMERIC_T,
-    classify_segments: bool,
+    airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD,
+    time_threshold: NUMERIC_T = FLIGHT_LENGTH_THRESHOLD,
+    start_trim: NUMERIC_T = START_TRIM,
+    classify_segments: bool = True,
 ) -> FlightLog:
     """Generate flight segment information for the provided `FlightLog` instance."""
     flight_log.flight_data = classify_flight(
