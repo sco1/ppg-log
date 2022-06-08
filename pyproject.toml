@@ -19,6 +19,13 @@ classifiers = [
     "Typing :: Typed",
 ]
 
+include = [
+    {path = "./CHANGELOG.md", format = "sdist"}
+]
+
+[tool.poetry.urls]
+"Issue Tracker" = "https://github.com/sco1/ppg-log/issues"
+
 [tool.poetry.scripts]
 ppglog = "ppg_log.cli:ppglog_cli"
 
@@ -43,8 +50,8 @@ flake8-docstrings = "^1.6"
 flake8-fixme = "^1.1"
 flake8-type-checking = {version="^1.5", python="<4.0"}
 isort = "^5.10"
-mypy = "^0.960"
-pep8-naming = "^0.12"
+mypy = "^0.961"
+pep8-naming = "^0.13"
 pre-commit = "^2.18"
 pytest = "^7.1"
 pytest-check = "^1.0"

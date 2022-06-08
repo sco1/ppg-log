@@ -3,16 +3,12 @@ from pathlib import Path
 from tkinter import filedialog
 
 import click
-import dotenv
 import typer
 
 from ppg_log import db, metrics
-
-dotenv.load_dotenv()
+from ppg_log.cli_db import db_cli
 
 ppglog_cli = typer.Typer(add_completion=False)
-
-db_cli = typer.Typer(add_completion=False)
 ppglog_cli.add_typer(db_cli, name="db", help="Interact with a PPG Log database instance.")
 
 CURRENT_DIR = Path()
@@ -110,17 +106,6 @@ def batch(
 
     if db_insert:
         db.bulk_insert(flight_logs, verbose=verbose)
-
-
-@db_cli.command()
-def set_address(value: str = typer.Argument(...)) -> None:
-    """Save the db address to a local .env file."""
-    local_dotenv = Path(dotenv.find_dotenv())
-    if not local_dotenv.is_file():
-        local_dotenv = Path() / ".env"
-        local_dotenv.write_text("")
-
-    dotenv.set_key(local_dotenv, db.DB_URL_VARNAME, value)
 
 
 if __name__ == "__main__":  # pragma: no cover
