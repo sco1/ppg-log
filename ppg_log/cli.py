@@ -7,6 +7,7 @@ import typer
 
 from ppg_log import db, metrics
 from ppg_log.cli_db import db_cli
+from ppg_log.exceptions import FlightSegmentationError
 
 ppglog_cli = typer.Typer(add_completion=False)
 ppglog_cli.add_typer(db_cli, name="db", help="Interact with a PPG Log database instance.")
@@ -65,12 +66,16 @@ def single(
     if log_filepath is None:
         log_filepath = _prompt_for_file(title="Select FlySight Flight Log")
 
-    flight_log = metrics.process_log(
-        log_file=log_filepath,
-        start_trim=start_trim,
-        airborne_threshold=airborne_threshold,
-        time_threshold=time_threshold,
-    )
+    try:
+        flight_log = metrics.process_log(
+            log_file=log_filepath,
+            start_trim=start_trim,
+            airborne_threshold=airborne_threshold,
+            time_threshold=time_threshold,
+        )
+    except FlightSegmentationError:
+        raise click.ClickException("Could not propertly segment flights, aborting.")
+
     flight_log.summary_plot(show_plot=show_plot, save_dir=plot_save_dir)
 
     if db_insert:

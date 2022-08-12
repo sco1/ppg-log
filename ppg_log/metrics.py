@@ -12,6 +12,7 @@ import humanize
 import numpy as np
 
 from ppg_log import parser, viz
+from ppg_log.exceptions import FlightSegmentationError
 
 if t.TYPE_CHECKING:
     from pathlib import Path
@@ -265,7 +266,12 @@ def _segment_flights(
     ):
         next_segment_delta.append(next_start - current_end)
 
-    flights = flights.reshape(-1, 2)
+    try:
+        flights = flights.reshape(-1, 2)
+    except ValueError:
+        raise FlightSegmentationError(
+            "Could not identify start and end indices for all flight segments."
+        )
 
     # Cast flights to a list on return so I don't have to deal the huge cascade of mypy errors from
     # trying to use an ndarray with zip_longest
@@ -422,14 +428,19 @@ def batch_process(
         if verbose:
             print(f"Processing {log_file.parent.stem}/{log_file.name} ... ", end="")
 
-        flight_log = process_log(
-            log_file,
-            start_trim=start_trim,
-            airborne_threshold=airborne_threshold,
-            time_threshold=time_threshold,
-            classify_segments=classify_segments,
-        )
-        parsed_logs.append(flight_log)
+        try:
+            flight_log = process_log(
+                log_file,
+                start_trim=start_trim,
+                airborne_threshold=airborne_threshold,
+                time_threshold=time_threshold,
+                classify_segments=classify_segments,
+            )
+            parsed_logs.append(flight_log)
+        except FlightSegmentationError:
+            if verbose:
+                print("Could not segment, skipped.")
+            continue
 
         if verbose:
             print("Done")
