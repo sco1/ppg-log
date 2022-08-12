@@ -58,7 +58,7 @@ def single(
     airborne_threshold: float = typer.Option(metrics.AIRBORNE_THRESHOLD),
     time_threshold: float = typer.Option(metrics.FLIGHT_LENGTH_THRESHOLD),
     show_plot: bool = typer.Option(True),
-    plot_save_dir: Path = typer.Option(None, file_okay=True, dir_okay=False),
+    plot_save_dir: Path = typer.Option(None, file_okay=False, dir_okay=True),
     db_insert: bool = typer.Option(False),
 ) -> None:
     """Single flight log processing pipeline."""
