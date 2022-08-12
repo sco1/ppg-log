@@ -1,2 +1,2 @@
-class FlightSegmentationError(ValueError):
+class FlightSegmentationError(ValueError):  # noqa: D101
     ...

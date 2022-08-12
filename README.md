@@ -44,17 +44,19 @@ Commands:
 ### `ppglog single`
 Process a single FlySight log file.
 #### Input Parameters
-| Parameter              | Description                                                      | Type         | Default    |
-|------------------------|------------------------------------------------------------------|--------------|------------|
-| `--log-filepath`       | Path to FlySight log to parse.                                   | `Path\|None` | GUI Prompt |
-| `--start-trim`         | Seconds to discard from the beginning of the flight log.         | `int\|float` | `45`       |
-| `--airborne-threshold` | Minimum groundspeed, as m/s, required to be considered airborne. | `int\|float` | `2.235`    |
-| `--time-threshold`     | Duration, as seconds, used to characterize flight segments.      | `int\|float` | `15`       |
-| `--show-plot`          | Show parsed flight log summary plot.                             | `bool`       | `True`     |
-| `--plot_save_dir`      | Path to save parsed flight log summary plot.<sup>1</sup>         | `Path\|None` | `None`     |
-| `--db-insert`          | Insert flight logs into the currently configured database.       | `bool`       | `False`    |
+| Parameter              | Description                                                                  | Type         | Default    |
+|------------------------|------------------------------------------------------------------------------|--------------|------------|
+| `--log-filepath`       | Path to FlySight log to parse.                                               | `Path\|None` | GUI Prompt |
+| `--start-trim`         | Seconds to discard from the beginning of the flight log.                     | `int\|float` | `45`       |
+| `--airborne-threshold` | Minimum groundspeed, as m/s, required to be considered airborne.             | `int\|float` | `2.235`    |
+| `--time-threshold`     | Duration, as seconds, used to characterize flight segments.                  | `int\|float` | `15`       |
+| `--midair-start`       | Consider the start of the file as the start of a flight segment.<sup>1</sup> | `bool`       | `False`    |
+| `--show-plot`          | Show parsed flight log summary plot.                                         | `bool`       | `True`     |
+| `--plot_save_dir`      | Path to save parsed flight log summary plot.<sup>2</sup>                     | `Path\|None` | `None`     |
+| `--db-insert`          | Insert flight logs into the currently configured database.                   | `bool`       | `False`    |
 
-1. If `None`, the summary plot will not be saved
+1. If `True`, any specificed `--start-trim` will be discarded
+2. If `None`, the summary plot will not be saved
 
 ### `ppglog batch`
 Batch process a directory of FlySight log files.

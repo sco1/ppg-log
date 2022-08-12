@@ -239,13 +239,16 @@ def classify_flight(
 
 
 def _segment_flights(
-    flight_data: pd.DataFrame, start_trim: NUMERIC_T
+    flight_data: pd.DataFrame, start_trim: NUMERIC_T, midair_start: bool
 ) -> tuple[list[list[int]], list[NUMERIC_T]]:
     """
     Identify candidate flight segments from the provided flight data.
 
     A list of `[takeoff, landing]` indices is returned along with a list of the time deltas, as
     decimal seconds, from the end of a segment to the beginning of the next segment.
+
+    If `midair_start` is `True`, it's assumed that the first segment begins at the beginning of the
+    file. In this case, `start_trim` will be set to zero upstream.
     """
     elapsed_time = flight_data["elapsed_time"]
 
@@ -258,6 +261,11 @@ def _segment_flights(
     diffs[0] = 0
     # Offset by the trim index since numpy's indices will be relative to the slice
     flights = np.flatnonzero(diffs == 1) + trim_idx
+
+    # Add the start index if we're assuming the flight log starts in midair. Unless something else
+    # is amiss, this should give us an even number of indices
+    if midair_start:
+        flights = np.concatenate(([0], flights))
 
     # Calculate time delta between flight segments, then reshape into nx2 for segment indices
     next_segment_delta = []
@@ -279,7 +287,10 @@ def _segment_flights(
 
 
 def find_flights(
-    flight_data: pd.DataFrame, time_threshold: NUMERIC_T, start_trim: NUMERIC_T
+    flight_data: pd.DataFrame,
+    time_threshold: NUMERIC_T,
+    start_trim: NUMERIC_T,
+    midair_start: bool,
 ) -> list[FlightSegment] | None:
     """
     Identify start & end indices of flight segments for the provided flight log.
@@ -295,10 +306,16 @@ def find_flights(
     identify when the pilot has landed.
 
     `start_trim`, in seconds, is used to exclude segments from the beginning of the data file.
+
+    If `midair_start` is `True`, it's assumed that the log file begins while airborne.
     """
     elapsed_time = flight_data["elapsed_time"]
 
-    flight_segments, next_segment_delta = _segment_flights(flight_data, start_trim)
+    flight_segments, next_segment_delta = _segment_flights(
+        flight_data=flight_data,
+        start_trim=start_trim,
+        midair_start=midair_start,
+    )
     if len(flight_segments) == 0:
         return None
 
@@ -349,6 +366,7 @@ def generate_flight_metrics(
     airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD,
     time_threshold: NUMERIC_T = FLIGHT_LENGTH_THRESHOLD,
     start_trim: NUMERIC_T = START_TRIM,
+    midair_start: bool = False,
     classify_segments: bool = True,
 ) -> FlightLog:
     """Generate flight segment information for the provided `FlightLog` instance."""
@@ -358,7 +376,10 @@ def generate_flight_metrics(
 
     if classify_segments:
         flight_log.metadata.flight_segments = find_flights(
-            flight_log.flight_data, time_threshold=time_threshold, start_trim=start_trim
+            flight_log.flight_data,
+            time_threshold=time_threshold,
+            start_trim=start_trim,
+            midair_start=midair_start,
         )
         if flight_log.metadata.flight_segments:
             flight_log.metadata.n_flight_segments = len(flight_log.metadata.flight_segments)
@@ -378,6 +399,7 @@ def process_log(
     start_trim: NUMERIC_T = START_TRIM,
     airborne_threshold: NUMERIC_T = AIRBORNE_THRESHOLD,
     time_threshold: NUMERIC_T = FLIGHT_LENGTH_THRESHOLD,
+    midair_start: bool = False,
     classify_segments: bool = True,
 ) -> FlightLog:
     """Processing pipeline for an individual FlySight log file."""
@@ -389,11 +411,16 @@ def process_log(
         metadata=LogMetadata(log_date=log_date, log_time=log_time),
     )
 
+    # Force `start_trim` to zero if we're assuming the log starts while we're already airborne
+    if midair_start:
+        start_trim = 0
+
     flight_log = generate_flight_metrics(
         flight_log,
         airborne_threshold=airborne_threshold,
         time_threshold=time_threshold,
         start_trim=start_trim,
+        midair_start=midair_start,
         classify_segments=classify_segments,
     )
 

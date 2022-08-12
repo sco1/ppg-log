@@ -58,6 +58,7 @@ def single(
     start_trim: float = typer.Option(metrics.START_TRIM),
     airborne_threshold: float = typer.Option(metrics.AIRBORNE_THRESHOLD),
     time_threshold: float = typer.Option(metrics.FLIGHT_LENGTH_THRESHOLD),
+    midair_start: bool = typer.Option(False),
     show_plot: bool = typer.Option(True),
     plot_save_dir: Path = typer.Option(None, file_okay=False, dir_okay=True),
     db_insert: bool = typer.Option(False),
@@ -72,6 +73,7 @@ def single(
             start_trim=start_trim,
             airborne_threshold=airborne_threshold,
             time_threshold=time_threshold,
+            midair_start=midair_start,
         )
     except FlightSegmentationError:
         raise click.ClickException("Could not propertly segment flights, aborting.")
