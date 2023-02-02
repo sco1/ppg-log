@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import typing as t
+from pathlib import Path
+
+import pandas as pd
 
 from ppg_log import metrics
-
-if t.TYPE_CHECKING:
-    from pathlib import Path
-
-    import pandas as pd
 
 KEEP_COLS = ["velN", "velE", "elapsed_time", "groundspeed", "flight_mode"]
 

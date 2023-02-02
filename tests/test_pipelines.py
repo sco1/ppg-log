@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import typing as t
 from pathlib import Path
 
+import pytest
+
 from ppg_log import metrics
-
-if t.TYPE_CHECKING:
-    import pytest
-
 
 SAMPLE_DATA_DIR = Path(__file__).parent / "sample_data"
 SAMPLE_LOG_PATTERN = "21*.CSV"  # Limit to a subset of the sample data

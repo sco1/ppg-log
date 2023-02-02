@@ -7,19 +7,14 @@ from dataclasses import dataclass
 from enum import IntEnum
 from functools import cached_property, partial
 from itertools import zip_longest
+from pathlib import Path
 
 import humanize
 import numpy as np
+import pandas as pd
 
-from ppg_log import parser, viz
+from ppg_log import db, parser, viz
 from ppg_log.exceptions import FlightSegmentationError
-
-if t.TYPE_CHECKING:
-    from pathlib import Path
-
-    import pandas as pd
-
-    from ppg_log import db
 
 START_TRIM = 45  # seconds
 ROLLING_WINDOW_WIDTH = 5

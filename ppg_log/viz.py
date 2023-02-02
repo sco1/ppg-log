@@ -1,22 +1,20 @@
 from __future__ import annotations
 
 import typing as t
+from pathlib import Path
 
 import humanize
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-if t.TYPE_CHECKING:
-    from pathlib import Path
-
-    from ppg_log.metrics import FlightLog
+from ppg_log import metrics
 
 pd.options.plotting.backend = "plotly"
 
 
 def summary_plot(
-    flight_log: FlightLog,
+    flight_log: metrics.FlightLog,
     save_path: Path | None = None,
     show_plot: bool = False,
     show_flight_mode: bool = False,

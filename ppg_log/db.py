@@ -7,8 +7,7 @@ import typing as t
 import peewee as pw
 from dotenv import load_dotenv
 
-if t.TYPE_CHECKING:
-    from ppg_log import metrics
+from ppg_log import metrics
 
 load_dotenv()
 DB_URL_VARNAME = "DB_URL"

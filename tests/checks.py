@@ -1,16 +1,13 @@
 from __future__ import annotations
 
+import datetime as dt
 import typing as t
 
+import pandas as pd
 import pytest
 from pytest_check import check_func
 
-if t.TYPE_CHECKING:
-    import datetime as dt
-
-    import pandas as pd
-
-    from ppg_log import metrics
+from ppg_log import metrics
 
 
 @check_func  # type: ignore[misc]  # fine with this untyped decorator

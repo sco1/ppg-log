@@ -43,21 +43,20 @@ typer = "^0.6"
 black = "^22.6"
 bump2version = "^1.0"
 cogapp = "^3.3"
-flake8 = "^5.0"
-flake8-annotations = "^2.8"
-flake8-bugbear = "^22.7"
+flake8 = "^6.0"
+flake8-annotations = "^3.0"
+flake8-bugbear = "^23.1"
 flake8-docstrings = "^1.6"
 flake8-fixme = "^1.1"
-flake8-type-checking = {version="^2.1", python="<4.0"}
 isort = "^5.10"
-mypy = "^0.971"
+mypy = "^0.991"
 pep8-naming = "^0.13"
-pre-commit = "^2.20"
+pre-commit = "^3.0"
 pytest = "^7.1"
-pytest-check = "^1.0"
-pytest-cov = "^3.0"
+pytest-check = "^2.1"
+pytest-cov = "^4.0"
 pytest-randomly = "^3.12"
-tox = "^3.25"
+tox = "^4.4"
 
 [tool.black]
 line-length = 100
@@ -84,5 +83,5 @@ warn_unused_configs = true
 warn_unused_ignores = true
 
 [build-system]
-requires = ["poetry-core>=1.0.8"]
+requires = ["poetry-core>=1.2"]
 build-backend = "poetry.core.masonry.api"
