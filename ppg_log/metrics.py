@@ -397,12 +397,27 @@ def process_log(
     midair_start: bool = False,
     classify_segments: bool = True,
 ) -> FlightLog:
-    """Processing pipeline for an individual FlySight log file."""
+    """
+    Processing pipeline for an individual FlySight or Gaggle log file.
+
+    NOTE: Processing pipeline selection between Flysight vs. Gaggle is done via case-insensitive
+    extension matching: `*.CSV` for Flysight and `*.GPX` for Gaggle.
+    """
     # Log files are grouped by date, need to retain this since it's not in the CSV filename
     log_date = log_file.parent.stem
-    log_time = log_file.stem
+
+    match log_file.suffix.upper():
+        case ".CSV":
+            log_time = log_file.stem
+            flight_data = parser.load_flysight(log_file)
+        case ".GPX":
+            flight_data, log_datetime = parser.load_gaggle(log_file)
+            log_time = log_datetime.strftime(r"%H-%M-%S")
+        case _:
+            raise ValueError(f"Unsupported file type: '{log_file.suffix}'")
+
     flight_log = FlightLog(
-        flight_data=parser.load_flysight(log_file),
+        flight_data=flight_data,
         metadata=LogMetadata(log_date=log_date, log_time=log_time),
     )
 
@@ -432,7 +447,7 @@ def batch_process(
     verbose: bool = True,
 ) -> list[FlightLog]:
     """
-    Batch process pipeline for a directory of FlySight logs.
+    Batch process pipeline for a directory of FlySight or Gaggle logs.
 
     Log file discovery is not recursive by default, the `log_pattern` kwarg can be adjusted to
     support a recursive glob.

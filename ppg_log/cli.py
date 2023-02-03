@@ -26,6 +26,7 @@ def _prompt_for_file(title: str, start_dir: Path = CURRENT_DIR) -> Path:  # prag
         multiple=False,
         filetypes=[
             ("FlySight Flight Log", "*.csv"),
+            ("Gaggle Flight Log", "*.gpx"),
             ("All Files", "*.*"),
         ],
     )
@@ -65,7 +66,7 @@ def single(
 ) -> None:
     """Single flight log processing pipeline."""
     if log_filepath is None:
-        log_filepath = _prompt_for_file(title="Select FlySight Flight Log")
+        log_filepath = _prompt_for_file(title="Select Flight Log")
 
     try:
         flight_log = metrics.process_log(
