@@ -1,9 +1,11 @@
+import os
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog
 
 import click
 import typer
+from dotenv import load_dotenv
 
 from ppg_log import db, metrics
 from ppg_log.cli_db import db_cli
@@ -12,10 +14,13 @@ from ppg_log.exceptions import FlightSegmentationError
 ppglog_cli = typer.Typer(add_completion=False)
 ppglog_cli.add_typer(db_cli, name="db", help="Interact with a PPG Log database instance.")
 
-CURRENT_DIR = Path()
+
+load_dotenv()
+start_dir = os.environ.get("PROMPT_START_DIR", ".")
+PROMPT_START_DIR = Path(start_dir)
 
 
-def _prompt_for_file(title: str, start_dir: Path = CURRENT_DIR) -> Path:  # pragma: no cover
+def _prompt_for_file(title: str, start_dir: Path = PROMPT_START_DIR) -> Path:  # pragma: no cover
     """Open a Tk file selection dialog to prompt the user to select a single file for processing."""
     root = tk.Tk()
     root.withdraw()
@@ -37,7 +42,7 @@ def _prompt_for_file(title: str, start_dir: Path = CURRENT_DIR) -> Path:  # prag
     return Path(picked)
 
 
-def _prompt_for_dir(start_dir: Path = CURRENT_DIR) -> Path:  # pragma: no cover
+def _prompt_for_dir(start_dir: Path = PROMPT_START_DIR) -> Path:  # pragma: no cover
     """Open a Tk file selection dialog to prompt the user to select a directory for processing."""
     root = tk.Tk()
     root.withdraw()

@@ -11,7 +11,7 @@ from ppg_log import metrics
 
 load_dotenv()
 DB_URL_VARNAME = "DB_URL"
-db_url = os.environ.get(DB_URL_VARNAME, "./test_db.db")
+db_url = os.environ.get(DB_URL_VARNAME, "./tmp_db.db")
 flight_db = pw.SqliteDatabase(db_url)
 
 

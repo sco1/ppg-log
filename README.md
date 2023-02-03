@@ -41,6 +41,14 @@ Commands:
 <!-- [[[end]]] -->
 
 ## Usage
+### Environment Variables
+The following environment variables are provided to help customize pipeline behaviors.
+
+| Variable Name      | Description                       | Default      |
+|--------------------|-----------------------------------|--------------|
+| `DB_URL`           | Flight log database URL           | `'./tmp.db'` |
+| `PROMPT_START_DIR` | Start path for UI file/dir prompt | `'.'`        |
+
 ### `ppglog single`
 Process a single FlySight log file.
 #### Input Parameters
