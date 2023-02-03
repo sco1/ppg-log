@@ -23,7 +23,7 @@ FLIGHT_LENGTH_THRESHOLD = 15  # seconds
 
 NUMERIC_T = int | float
 
-LOG_DATETIME_FMT = r"%Y-%m-%d_%H-%M-%S"
+LOG_DATETIME_FMT = r"%y-%m-%d_%H-%M-%S"
 
 HUMANIZED_DELTA = partial(humanize.precisedelta, minimum_unit="seconds", format="%d")
 
@@ -49,7 +49,7 @@ class FlightSegment:  # noqa: D101
 
 @dataclass(slots=True)
 class LogMetadata:  # noqa: D101
-    log_date: str
+    log_date: str  # expected as YY-MM-DD
     log_time: str
 
     # Flight quantities are calculated downstream

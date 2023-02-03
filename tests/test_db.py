@@ -12,7 +12,7 @@ TEST_DB = pw.SqliteDatabase(":memory:")
 
 DUMMY_DURATION = dt.timedelta(seconds=5)
 PARTIAL_SEGMENT = partial(FlightSegment, start_idx=-1, end_idx=-1)
-PARTIAL_META = partial(LogMetadata, log_date="2022-04-20", log_time="04-20-00")
+PARTIAL_META = partial(LogMetadata, log_date="22-04-20", log_time="04-20-00")
 
 DUMMY_FLIGHT_LOG = FlightLog(
     flight_data=None,
@@ -28,7 +28,7 @@ DUMMY_BULK_LOGS = [
     FlightLog(
         flight_data=None,
         metadata=PARTIAL_META(
-            log_date="2022-04-21",
+            log_date="22-04-21",
             n_flight_segments=1,
             total_flight_time=DUMMY_DURATION,
             flight_segments=[PARTIAL_SEGMENT(duration=DUMMY_DURATION)],
@@ -38,7 +38,7 @@ DUMMY_BULK_LOGS = [
 
 DUMMY_FLIGHT_LOG_NO_FLIGHTS = FlightLog(
     flight_data=None,
-    metadata=PARTIAL_META(log_date="2022-04-21"),
+    metadata=PARTIAL_META(log_date="22-04-21"),
 )
 
 
