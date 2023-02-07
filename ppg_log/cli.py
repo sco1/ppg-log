@@ -1,11 +1,10 @@
 import os
-import tkinter as tk
 from pathlib import Path
-from tkinter import filedialog
 
 import click
 import typer
 from dotenv import load_dotenv
+from sco1_misc.prompts import prompt_for_dir, prompt_for_file
 
 from ppg_log import db, metrics
 from ppg_log.cli_db import db_cli
@@ -18,44 +17,6 @@ ppglog_cli.add_typer(db_cli, name="db", help="Interact with a PPG Log database i
 load_dotenv()
 start_dir = os.environ.get("PROMPT_START_DIR", ".")
 PROMPT_START_DIR = Path(start_dir)
-
-
-def _prompt_for_file(title: str, start_dir: Path = PROMPT_START_DIR) -> Path:  # pragma: no cover
-    """Open a Tk file selection dialog to prompt the user to select a single file for processing."""
-    root = tk.Tk()
-    root.withdraw()
-
-    picked = filedialog.askopenfilename(  # type: ignore[call-arg]  # stub issue
-        title=title,
-        initialdir=start_dir,
-        multiple=False,
-        filetypes=[
-            ("FlySight Flight Log", "*.csv"),
-            ("Gaggle Flight Log", "*.gpx"),
-            ("All Files", "*.*"),
-        ],
-    )
-
-    if not picked:
-        raise click.ClickException("No file selected for parsing, aborting.")
-
-    return Path(picked)
-
-
-def _prompt_for_dir(start_dir: Path = PROMPT_START_DIR) -> Path:  # pragma: no cover
-    """Open a Tk file selection dialog to prompt the user to select a directory for processing."""
-    root = tk.Tk()
-    root.withdraw()
-
-    picked = filedialog.askdirectory(
-        title="Select directory for batch processing",
-        initialdir=start_dir,
-    )
-
-    if not picked:
-        raise click.ClickException("No directory selected for parsing, aborting.")
-
-    return Path(picked)
 
 
 @ppglog_cli.command()
@@ -71,7 +32,15 @@ def single(
 ) -> None:
     """Single flight log processing pipeline."""
     if log_filepath is None:
-        log_filepath = _prompt_for_file(title="Select Flight Log")
+        log_filepath = prompt_for_file(
+            title="Select Flight Log",
+            start_dir=PROMPT_START_DIR,
+            filetypes=[
+                ("FlySight Flight Log", "*.csv"),
+                ("Gaggle Flight Log", "*.gpx"),
+                ("All Files", "*.*"),
+            ],
+        )
 
     try:
         flight_log = metrics.process_log(
@@ -103,7 +72,9 @@ def batch(
 ) -> None:
     """Batch flight log processing pipeline."""
     if log_dir is None:
-        log_dir = _prompt_for_dir()
+        log_dir = prompt_for_dir(
+            title="Select directory for batch processing", start_dir=PROMPT_START_DIR
+        )
 
     flight_logs = metrics.batch_process(
         top_dir=log_dir,
