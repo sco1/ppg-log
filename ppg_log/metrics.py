@@ -271,10 +271,10 @@ def _segment_flights(
 
     try:
         flights = flights.reshape(-1, 2)
-    except ValueError:
+    except ValueError as e:
         raise FlightSegmentationError(
             "Could not identify start and end indices for all flight segments."
-        )
+        ) from e
 
     # Cast flights to a list on return so I don't have to deal the huge cascade of mypy errors from
     # trying to use an ndarray with zip_longest

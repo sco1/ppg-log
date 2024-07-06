@@ -50,8 +50,8 @@ def single(
             time_threshold=time_threshold,
             midair_start=midair_start,
         )
-    except FlightSegmentationError:
-        raise click.ClickException("Could not propertly segment flights, aborting.")
+    except FlightSegmentationError as e:
+        raise click.ClickException("Could not propertly segment flights, aborting.") from e
 
     flight_log.summary_plot(show_plot=show_plot, save_dir=plot_save_dir)
 
