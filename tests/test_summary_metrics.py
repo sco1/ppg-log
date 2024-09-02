@@ -82,7 +82,6 @@ BATCH_METADATA_CASES = (
             PARTIAL_LOG(
                 metadata=PARTIAL_META(
                     n_flight_segments=None,
-                    total_flight_time=None,
                     flight_segments=None,
                 )
             ),
