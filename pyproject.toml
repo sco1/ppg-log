@@ -1,12 +1,15 @@
-[tool.poetry]
+[project]
 name = "PPG-Log"
 version = "0.1.0"
 description = "Helper Tools for PPG FlySight Flight Log Management"
-authors = ["sco1 <sco1.git@gmail.com>"]
+authors = [
+    {name = "sco1", email = "sco1.git@gmail.com"}
+]
+maintainers = [
+    {name = "sco1", email = "sco1.git@gmail.com"}
+]
 
 readme = "README.md"
-homepage = "https://github.com/sco1/"
-repository = "https://github.com/sco1/ppg-log"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -21,42 +24,46 @@ classifiers = [
     "Typing :: Typed",
 ]
 
-include = [
-    {path = "./CHANGELOG.md", format = "sdist"}
+requires-python = ">=3.10"
+dependencies = [
+    "humanize~=4.10",
+    "kaleido~=0.2, != 0.2.1.post1",
+    "pandas~=2.2",
+    "peewee~=3.17",
+    "plotly~=5.24",
+    "python-dotenv~=1.0",
+    "sco1-misc~=0.1",
+    "typer-slim~=0.12",
 ]
 
-[tool.poetry.urls]
-"Issue Tracker" = "https://github.com/sco1/ppg-log/issues"
+[project.urls]
+Homepage = "https://github.com/sco1/"
+Documentation = "https://github.com/sco1/ppg-log/blob/main/README.md"
+Repository = "https://github.com/sco1/ppg-log"
+Issues = "https://github.com/sco1/ppg-log/issues"
+Changelog = "https://github.com/sco1/ppg-log/blob/main/CHANGELOG.md"
 
-[tool.poetry.scripts]
+[project.scripts]
 ppglog = "ppg_log.cli:ppglog_cli"
 
-[tool.poetry.dependencies]
-python = "^3.10"
-humanize = "^4.1"
-kaleido = "^0.2, != 0.2.1.post1"
-pandas = "^2.2"
-peewee = "^3.15"
-plotly = "^5.8"
-python-dotenv = "^1.0"
-sco1-misc = "^0.1"
-typer-slim = "^0.12"
-
-[tool.poetry.dev-dependencies]
-black = "^24.8"
-bump2version = "^1.0"
-cogapp = "^3.3"
-flake8 = "^7.0"
-flake8-annotations = "^3.0"
-isort = "^5.12"
-mypy = "^1.0"
-pre-commit = "^3.0"
-pytest = "^8.0"
-pytest-check = "^2.1"
-pytest-cov = "^5.0"
-pytest-randomly = "^3.12"
-ruff = "^0.6"
-tox = "^4.4"
+[tool.uv]
+dev-dependencies = [
+    "black~=24.8",
+    "bump2version~=1.0",
+    "cogapp~=3.3",
+    "flake8~=7.1",
+    "flake8-annotations~=3.1",
+    "isort~=5.13",
+    "mypy~=1.11",
+    "pre-commit~=3.8",
+    "pytest~=8.3",
+    "pytest-check~=2.4",
+    "pytest-cov~=5.0",
+    "pytest-randomly~=3.15",
+    "ruff~=0.6",
+    "tox~=4.18",
+    "tox-uv~=1.11",
+]
 
 [tool.black]
 line-length = 100
@@ -83,5 +90,5 @@ warn_unused_configs = true
 warn_unused_ignores = true
 
 [build-system]
-requires = ["poetry-core>=1.2"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
