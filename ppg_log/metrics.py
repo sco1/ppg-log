@@ -265,7 +265,9 @@ def _segment_flights(
     # Calculate time delta between flight segments, then reshape into nx2 for segment indices
     next_segment_delta = []
     for current_end, next_start in zip(
-        elapsed_time.iloc[flights[1:-1:2]], elapsed_time.iloc[flights[2::2]]
+        elapsed_time.iloc[flights[1:-1:2]],
+        elapsed_time.iloc[flights[2::2]],
+        strict=False,
     ):
         next_segment_delta.append(next_start - current_end)
 
