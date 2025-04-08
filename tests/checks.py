@@ -10,12 +10,12 @@ from pytest_check import check_func
 from ppg_log import metrics
 
 
-@check_func  # type: ignore[misc]  # fine with this untyped decorator
+@check_func
 def is_col(df: pd.DataFrame, col_name: str) -> None:
     assert col_name in df.columns
 
 
-@check_func  # type: ignore[misc]  # fine with this untyped decorator
+@check_func
 def is_dtype(df: pd.DataFrame, col_name: str, type_check: t.Callable) -> None:
     """
     Check that the query dataframe matches the correct type.
@@ -26,7 +26,7 @@ def is_dtype(df: pd.DataFrame, col_name: str, type_check: t.Callable) -> None:
     assert type_check(df[col_name])
 
 
-@check_func  # type: ignore[misc]  # fine with this untyped decorator
+@check_func
 def segment_isclose(
     flight: metrics.FlightSegment,
     truth: metrics.FlightSegment,

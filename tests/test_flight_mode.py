@@ -36,7 +36,7 @@ class DataTruthMap(t.NamedTuple):
 
 
 DURATION_TOL = dt.timedelta(seconds=1)
-IDX_TOL = DURATION_TOL.total_seconds() // 0.2  # Sample rate assumed to be 5 Hz
+IDX_TOL = int(DURATION_TOL.total_seconds() // 0.2)  # Sample rate assumed to be 5 Hz
 
 PARTIAL_LOG = partial(
     metrics.FlightLog, metadata=metrics.LogMetadata(log_date="2022-04-20", log_time="04-20-00")
@@ -126,7 +126,9 @@ def test_flight_classification(data_mapping: DataTruthMap) -> None:
         # For mypy: ignore the case of optional flight segments, they're present in this block
         assert len(flight_log.metadata.flight_segments) == len(data_mapping.flight_segments)  # type: ignore[arg-type]  # noqa: E501
         for flight_segment, truth_segment in zip(
-            flight_log.metadata.flight_segments, data_mapping.flight_segments  # type: ignore[arg-type]
+            flight_log.metadata.flight_segments,  # type: ignore[arg-type]
+            data_mapping.flight_segments,
+            strict=False,
         ):
             checks.segment_isclose(
                 flight_segment, truth_segment, idx_tol=IDX_TOL, duration_tol=DURATION_TOL
