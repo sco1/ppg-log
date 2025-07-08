@@ -1,0 +1,11 @@
+[tool.bumper]
+current_version = "0.1.0"
+versioning_type = "semver"
+
+[[tool.bumper.files]]
+file = "./pyproject.toml"
+search = 'version = "{current_version}"'
+
+[[tool.bumper.files]]
+file = "./README.md"
+search = "ppg-log/{current_version}"

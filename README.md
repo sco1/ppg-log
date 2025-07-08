@@ -32,9 +32,9 @@ Options:
   --help  Show this message and exit.
 
 Commands:
+  single  Single flight log processing pipeline.
   batch   Batch flight log processing pipeline.
   db      Interact with a PPG Log database instance.
-  single  Single flight log processing pipeline.
 ```
 <!-- [[[end]]] -->
 
