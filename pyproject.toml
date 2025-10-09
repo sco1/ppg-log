@@ -14,21 +14,20 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
     "Typing :: Typed",
 ]
 
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "humanize~=4.10",
-    "kaleido~=0.2, != 0.2.1.post1",
+    "kaleido~=1.1",
     "pandas~=2.2",
     "peewee~=3.17",
-    "plotly~=5.24",
+    "plotly~=6.3",
     "python-dotenv~=1.0",
     "sco1-misc~=0.1",
     "typer-slim~=0.12",
@@ -44,19 +43,20 @@ Changelog = "https://github.com/sco1/ppg-log/blob/main/CHANGELOG.md"
 [project.scripts]
 ppglog = "ppg_log.cli:ppglog_cli"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "black~=25.0",
     "cogapp~=3.3",
     "flake8~=7.1",
     "flake8-annotations~=3.1",
+    "flake8-define-class-attributes~=0.2",
     "isort~=6.0",
     "mypy~=1.11",
     "pre-commit~=4.0",
     "pytest~=8.3",
     "pytest-check~=2.4",
-    "pytest-cov~=6.0",
-    "pytest-randomly~=3.15",
+    "pytest-cov~=7.0",
+    "pytest-randomly~=4.0",
     "ruff~=0.6",
     "sco1-bumper~=2.0",
     "tox~=4.18",
@@ -79,6 +79,7 @@ disallow_incomplete_defs = true
 disallow_untyped_calls = true
 disallow_untyped_decorators = true
 disallow_untyped_defs = true
+enable_error_code = "exhaustive-match"
 ignore_missing_imports = true
 no_implicit_optional = true
 show_error_codes = true
@@ -87,6 +88,10 @@ warn_return_any = true
 warn_unused_configs = true
 warn_unused_ignores = true
 
+[tool.uv.build-backend]
+module-name = "ppg_log"
+module-root = ""
+
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build"]
+build-backend = "uv_build"
