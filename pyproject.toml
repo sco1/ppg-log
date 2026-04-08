@@ -25,12 +25,12 @@ requires-python = ">=3.12"
 dependencies = [
     "humanize~=4.10",
     "kaleido~=1.1",
-    "pandas~=2.2",
-    "peewee~=3.17",
+    "pandas~=3.0",
+    "peewee~=4.0",
     "plotly~=6.3",
     "python-dotenv~=1.0",
     "sco1-misc~=0.1",
-    "typer-slim~=0.12",
+    "typer~=0.24",
 ]
 
 [project.urls]
@@ -45,12 +45,12 @@ ppglog = "ppg_log.cli:ppglog_cli"
 
 [dependency-groups]
 dev = [
-    "black~=25.0",
+    "black~=26.3",
     "cogapp~=3.3",
     "flake8~=7.1",
     "flake8-annotations~=3.1",
     "flake8-define-class-attributes~=0.2",
-    "isort~=7.0",
+    "isort~=8.0",
     "mypy~=1.11",
     "pre-commit~=4.0",
     "pytest~=9.0",

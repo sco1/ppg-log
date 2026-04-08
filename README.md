@@ -19,7 +19,7 @@ You can confirm proper installation via the `ppglog` CLI:
 <!-- [[[cog
 import cog
 from subprocess import PIPE, run
-out = run(["ppglog", "--help"], stdout=PIPE, encoding="ascii")
+out = run(["ppglog", "--help"], stdout=PIPE, encoding="ascii", env={"TYPER_USE_RICH": "0"})
 cog.out(
     f"```bash\n$ ppglog --help\n{out.stdout.rstrip()}\n```"
 )
