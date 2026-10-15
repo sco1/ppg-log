@@ -143,7 +143,7 @@ def summary_query() -> SummaryTuple:
 
     # Need to deserialize the flight segments to get the rest of the summary information
     raw_segments = FlightLogEntry.select(FlightLogEntry.flight_segment_durations).tuples()
-    all_segments = ",".join(row[0] for row in raw_segments if row[0])
+    all_segments = ",".join(row[0] for row in raw_segments if row[0])  # type: ignore[index]
     converted_segments = [
         dt.timedelta(seconds=float(segment)) for segment in all_segments.split(",")
     ]
