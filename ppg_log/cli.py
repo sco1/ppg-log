@@ -4,7 +4,7 @@ from pathlib import Path
 import click
 import typer
 from dotenv import load_dotenv
-from sco1_misc.prompts import prompt_for_dir, prompt_for_file
+from tkdlg.prompts import prompt_for_dir, prompt_for_file
 
 from ppg_log import db, metrics
 from ppg_log.cli_db import db_cli
